@@ -1,0 +1,31 @@
+package com.salonmanagementsystem.dto;
+
+import java.time.LocalDate;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AppointmentResponseDTO {
+
+    private Long appointmentId;
+
+    private String customerName;
+
+    private String serviceName;
+
+    private String employeeName;
+
+    private String employeeImage;
+
+    private LocalDate appointmentDate;
+
+    private String appointmentTime;
+
+    private String bookingStatus;
+
+    private String paymentStatus;
+}
