@@ -12,15 +12,22 @@ import lombok.NoArgsConstructor;
 public class AppointmentRequestDTO {
 
     private String customerName;
+
     private String customerPhone;
+
     private String customerEmail;
 
+    private Long salonId;
+
     private Long serviceId;
+
     private Long employeeId;
 
     private LocalDate appointmentDate;
+
     private String appointmentTime;
 
     private String bookingStatus;
+
     private String paymentStatus;
 }

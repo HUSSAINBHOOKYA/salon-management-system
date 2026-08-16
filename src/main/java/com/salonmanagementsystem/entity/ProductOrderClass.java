@@ -2,7 +2,11 @@ package com.salonmanagementsystem.entity;
 
 import java.time.LocalDate;
 
+import com.salonmanagementsystem.enums.PaymentStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,7 +38,8 @@ public class ProductOrderClass {
 
 	private Double totalPrice;
 
-	private String paymentStatus;
+	@Enumerated(EnumType.STRING)
+	private PaymentStatus paymentStatus;
 
 	private LocalDate orderDate;
 

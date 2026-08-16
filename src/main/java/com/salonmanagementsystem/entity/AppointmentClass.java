@@ -2,7 +2,12 @@ package com.salonmanagementsystem.entity;
 
 import java.time.LocalDate;
 
+import com.salonmanagementsystem.enums.BookingStatus;
+import com.salonmanagementsystem.enums.PaymentStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,6 +29,9 @@ public class AppointmentClass {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // =========================================
+    // CUSTOMER DETAILS
+    // =========================================
 
     private String customerName;
 
@@ -31,28 +39,52 @@ public class AppointmentClass {
 
     private String customerEmail;
 
+    // =========================================
+    // APPOINTMENT DETAILS
+    // =========================================
 
     private LocalDate appointmentDate;
 
     private String appointmentTime;
 
-    private String bookingStatus;
+    @Enumerated(EnumType.STRING)
+    private BookingStatus bookingStatus;
 
-    private String paymentStatus;
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
 
+    // =========================================
+    // APPOINTMENT → SALON
+    // =========================================
+
+    @ManyToOne
+    @JoinColumn(
+            name = "salon_id",
+            nullable = false
+    )
+    private Salon salon;
+
+    // =========================================
+    // APPOINTMENT → SERVICE
+    // =========================================
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    private ServiceClass service;
+    private SalonService salonService;
 
+    // =========================================
+    // APPOINTMENT → EMPLOYEE
+    // =========================================
 
     @ManyToOne
     @JoinColumn(name = "employee_id")
     private EmployeeClass employee;
 
+    // =========================================
+    // APPOINTMENT → TIME SLOT
+    // =========================================
 
     @ManyToOne
     @JoinColumn(name = "timeslot_id")
     private TimeSlotClass timeSlot;
-
 }

@@ -4,17 +4,62 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import com.salonmanagementsystem.entity.TimeSlotClass;
+import com.salonmanagementsystem.enums.TimeSlotStatus;
 
-@Repository
-public interface TimeSlotRepository extends JpaRepository<TimeSlotClass, Long> {
-        
+public interface TimeSlotRepository
+        extends JpaRepository<TimeSlotClass, Long> {
+
+    // =========================================
+    // FIND DUPLICATE SLOT
+    // =========================================
+
     Optional<TimeSlotClass> findByEmployeeIdAndSlotDateAndSlotTime(
             Long employeeId,
             LocalDate slotDate,
-            String slotTime);
-    List<TimeSlotClass> findBySlotStatus(String slotStatus);
+            String slotTime
+    );
+
+    // =========================================
+    // SEARCH BY SLOT TIME
+    // =========================================
+
+    Page<TimeSlotClass> findBySlotTimeContainingIgnoreCase(
+            String slotTime,
+            Pageable pageable
+    );
+
+    // =========================================
+    // FILTER BY STATUS
+    // =========================================
+
+    Page<TimeSlotClass> findBySlotStatus(
+            TimeSlotStatus slotStatus,
+            Pageable pageable
+    );
+
+    // =========================================
+    // GET TIME SLOTS BY SALON
+    // =========================================
+
+    List<TimeSlotClass> findBySalonId(
+            Long salonId
+    );
+
+    // =========================================
+    // AVAILABLE SLOTS
+    // BY SALON + EMPLOYEE + DATE
+    // =========================================
+
+    List<TimeSlotClass>
+    findBySalonIdAndEmployeeIdAndSlotDateAndSlotStatus(
+            Long salonId,
+            Long employeeId,
+            LocalDate slotDate,
+            TimeSlotStatus slotStatus
+    );
 }

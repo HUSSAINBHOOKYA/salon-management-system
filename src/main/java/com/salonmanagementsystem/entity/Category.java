@@ -1,7 +1,11 @@
 package com.salonmanagementsystem.entity;
 
+import com.salonmanagementsystem.enums.CategoryStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,31 +14,26 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
+@Entity
+@Table(name = "category_table")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
-@Entity
-@Table(name = "servicesTable")
-
-public class ServiceClass {
-
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "service_name", nullable = false)
-    private String serviceName;
+    @Column(nullable = false)
+    private String categoryName;
 
+    @Column(length = 500)
     private String description;
 
-    private Double price;
+    private String imageUrl;
 
-    private Integer duration;
-
-    
-    
-
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CategoryStatus status;
 }

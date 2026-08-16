@@ -21,6 +21,10 @@ public class AppointmentResponseDTO {
 
     private String employeeImage;
 
+    private Long salonId;
+
+    private String salonName;
+
     private LocalDate appointmentDate;
 
     private String appointmentTime;

@@ -2,7 +2,14 @@ package com.salonmanagementsystem.entity;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.salonmanagementsystem.enums.TimeSlotStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,14 +35,36 @@ public class TimeSlotClass {
 
     private String slotTime;
 
-    private String slotStatus;
+    @Enumerated(EnumType.STRING)
+    private TimeSlotStatus slotStatus;
 
-    @ManyToOne
+    // =========================================
+    // TIME SLOT → SALON
+    // =========================================
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "salon_id",
+            nullable = false
+    )
+    @JsonIgnore
+    private Salon salon;
+
+    // =========================================
+    // TIME SLOT → SERVICE
+    // =========================================
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
-    private ServiceClass service;
+    @JsonIgnore
+    private SalonService salonService;
 
-    @ManyToOne
+    // =========================================
+    // TIME SLOT → EMPLOYEE
+    // =========================================
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
+    @JsonIgnore
     private EmployeeClass employee;
-
 }

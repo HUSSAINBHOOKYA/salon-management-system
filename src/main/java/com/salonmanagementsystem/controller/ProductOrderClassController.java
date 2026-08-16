@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.salonmanagementsystem.dto.PaginationResponse;
 import com.salonmanagementsystem.entity.ProductOrderClass;
 import com.salonmanagementsystem.service.ProductOrderClassService;
 
@@ -19,52 +21,64 @@ import com.salonmanagementsystem.service.ProductOrderClassService;
 @RequestMapping("/api/product-orders")
 public class ProductOrderClassController {
 
-    @Autowired
-    private ProductOrderClassService productOrderClassService;
+	@Autowired
+	private ProductOrderClassService productOrderClassService;
 
-    // Add Order
-    @PostMapping("/add")
-    public ProductOrderClass addOrder(
-            @RequestBody ProductOrderClass productOrderClass) {
+	// Add Order
+	@PostMapping("/add")
+	public ProductOrderClass addOrder(@RequestBody ProductOrderClass productOrderClass) {
 
-        return productOrderClassService.addProductOrder(productOrderClass);
-    }
+		return productOrderClassService.addProductOrder(productOrderClass);
+	}
 
-    // Get All Orders
-    @GetMapping("/all")
-    public List<ProductOrderClass> getAllOrders() {
+	// Get All Orders
+	@GetMapping("/all")
+	public List<ProductOrderClass> getAllOrders() {
 
-        return productOrderClassService.getAllOrders();
-    }
+		return productOrderClassService.getAllOrders();
+	}
 
-    // Get Order By Id
-    @GetMapping("/{id}")
-    public ProductOrderClass getOrderById(@PathVariable Long id) {
+	// Get Order By Id
+	@GetMapping("/{id}")
+	public ProductOrderClass getOrderById(@PathVariable Long id) {
 
-        return productOrderClassService.getOrderById(id);
-    }
+		return productOrderClassService.getOrderById(id);
+	}
 
-    // Update Order
-    @PutMapping("/update/{id}")
-    public ProductOrderClass updateOrder(
-            @PathVariable Long id,
-            @RequestBody ProductOrderClass productOrderClass) {
+	// Update Order
+	@PutMapping("/update/{id}")
+	public ProductOrderClass updateOrder(@PathVariable Long id, @RequestBody ProductOrderClass productOrderClass) {
 
-        return productOrderClassService.updateOrder(id, productOrderClass);
-    }
+		return productOrderClassService.updateOrder(id, productOrderClass);
+	}
 
-    // Delete Order
-    @DeleteMapping("/delete/{id}")
-    public String deleteOrder(@PathVariable Long id) {
+	// Delete Order
+	@DeleteMapping("/delete/{id}")
+	public String deleteOrder(@PathVariable Long id) {
 
-        return productOrderClassService.deleteOrder(id);
-    }
-    
-    @GetMapping("/customer/{name}")
-    public List<ProductOrderClass> getOrdersByCustomer(
-            @PathVariable String name) {
+		return productOrderClassService.deleteOrder(id);
+	}
 
-        return productOrderClassService.getOrdersByCustomer(name);
-    }
+	// Search Orders
+	@GetMapping("/search")
+	public List<ProductOrderClass> searchOrders(@RequestParam String name) {
+
+		return productOrderClassService.searchOrders(name);
+
+	}
+
+	// Pagination
+	@GetMapping("/pagination")
+	public PaginationResponse<ProductOrderClass> getOrdersPagination(
+
+			@RequestParam(defaultValue = "0") int page,
+
+			@RequestParam(defaultValue = "10") int size
+
+	) {
+
+		return productOrderClassService.getOrdersPagination(page, size);
+
+	}
 
 }

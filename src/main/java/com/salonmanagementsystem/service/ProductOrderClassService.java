@@ -3,10 +3,15 @@ package com.salonmanagementsystem.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.salonmanagementsystem.dto.PaginationResponse;
 import com.salonmanagementsystem.entity.ProductClass;
 import com.salonmanagementsystem.entity.ProductOrderClass;
+import com.salonmanagementsystem.enums.ProductStatus;
 import com.salonmanagementsystem.repository.ProductOrderRepository;
 import com.salonmanagementsystem.repository.ProductRepository;
 
@@ -28,7 +33,7 @@ public class ProductOrderClassService {
 
         // Check Stock
         if (product.getStockQuantity() < productOrderClass.getQuantity()) {
-            throw new RuntimeException("Product Out Of Stock");
+            throw new RuntimeException("Insufficient Stock");
         }
 
         // Calculate Total Price
@@ -41,6 +46,13 @@ public class ProductOrderClassService {
         product.setStockQuantity(
                 product.getStockQuantity() - productOrderClass.getQuantity());
 
+        // Update Product Status
+        if (product.getStockQuantity() == 0) {
+            product.setStatus(ProductStatus.OUT_OF_STOCK);
+        } else {
+            product.setStatus(ProductStatus.AVAILABLE);
+        }
+
         productRepository.save(product);
 
         productOrderClass.setProduct(product);
@@ -50,63 +62,157 @@ public class ProductOrderClassService {
 
     // Get All Orders
     public List<ProductOrderClass> getAllOrders() {
-
         return productOrderRepository.findAll();
     }
 
     // Get Order By Id
     public ProductOrderClass getOrderById(Long id) {
-
         return productOrderRepository.findById(id).orElse(null);
     }
 
-    // Update Order
+//    // Update Order
+//    public ProductOrderClass updateOrder(Long id,
+//            ProductOrderClass productOrderClass) {
+//
+//        ProductOrderClass existingOrder =
+//                productOrderRepository.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+//
+//        ProductClass product = productRepository
+//                .findById(productOrderClass.getProduct().getId())
+//                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+//
+//        existingOrder.setCustomerName(productOrderClass.getCustomerName());
+//        existingOrder.setCustomerPhone(productOrderClass.getCustomerPhone());
+//        existingOrder.setCustomerEmail(productOrderClass.getCustomerEmail());
+//        existingOrder.setQuantity(productOrderClass.getQuantity());
+//        existingOrder.setPaymentStatus(productOrderClass.getPaymentStatus());
+//        existingOrder.setOrderDate(productOrderClass.getOrderDate());
+//        existingOrder.setProduct(product);
+//
+//        Double totalPrice =
+//                product.getPrice() * productOrderClass.getQuantity();
+//
+//        existingOrder.setTotalPrice(totalPrice);
+//
+//        return productOrderRepository.save(existingOrder);
+//    }
+    
+ // Update Order
     public ProductOrderClass updateOrder(Long id,
-                                         ProductOrderClass productOrderClass) {
+            ProductOrderClass productOrderClass) {
 
-        ProductOrderClass existingOrder =
-                productOrderRepository.findById(id).orElse(null);
+        ProductOrderClass existingOrder = productOrderRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Not Found"));
 
-        if (existingOrder != null) {
+        ProductClass oldProduct = existingOrder.getProduct();
 
-            ProductClass product = productRepository
-                    .findById(productOrderClass.getProduct().getId())
-                    .orElseThrow(() -> new RuntimeException("Product Not Found"));
+        ProductClass newProduct = productRepository
+                .findById(productOrderClass.getProduct().getId())
+                .orElseThrow(() -> new RuntimeException("Product Not Found"));
 
-            existingOrder.setCustomerName(productOrderClass.getCustomerName());
-            existingOrder.setCustomerPhone(productOrderClass.getCustomerPhone());
-            existingOrder.setCustomerEmail(productOrderClass.getCustomerEmail());
-            existingOrder.setQuantity(productOrderClass.getQuantity());
-            existingOrder.setPaymentStatus(productOrderClass.getPaymentStatus());
-            existingOrder.setOrderDate(productOrderClass.getOrderDate());
-            existingOrder.setProduct(product);
+        // Restore old stock
+        oldProduct.setStockQuantity(
+                oldProduct.getStockQuantity() + existingOrder.getQuantity());
 
-            Double total =
-                    product.getPrice() * productOrderClass.getQuantity();
-
-            existingOrder.setTotalPrice(total);
-
-            return productOrderRepository.save(existingOrder);
+        if (oldProduct.getStockQuantity() > 0) {
+            oldProduct.setStatus(ProductStatus.AVAILABLE);
+        } else {
+            oldProduct.setStatus(ProductStatus.OUT_OF_STOCK);
         }
 
-        return null;
+        productRepository.save(oldProduct);
+
+        // Check new stock
+        if (newProduct.getStockQuantity() < productOrderClass.getQuantity()) {
+            throw new RuntimeException("Insufficient Stock");
+        }
+
+        // Reduce new stock
+        newProduct.setStockQuantity(
+                newProduct.getStockQuantity() - productOrderClass.getQuantity());
+
+        if (newProduct.getStockQuantity() == 0) {
+            newProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+        } else {
+            newProduct.setStatus(ProductStatus.AVAILABLE);
+        }
+
+        productRepository.save(newProduct);
+
+        // Update order details
+        existingOrder.setCustomerName(productOrderClass.getCustomerName());
+        existingOrder.setCustomerPhone(productOrderClass.getCustomerPhone());
+        existingOrder.setCustomerEmail(productOrderClass.getCustomerEmail());
+        existingOrder.setQuantity(productOrderClass.getQuantity());
+        existingOrder.setPaymentStatus(productOrderClass.getPaymentStatus());
+        existingOrder.setOrderDate(productOrderClass.getOrderDate());
+        existingOrder.setProduct(newProduct);
+
+        existingOrder.setTotalPrice(
+                newProduct.getPrice() * productOrderClass.getQuantity());
+
+        return productOrderRepository.save(existingOrder);
     }
 
     // Delete Order
     public String deleteOrder(Long id) {
 
-        if (productOrderRepository.existsById(id)) {
+        ProductOrderClass order = productOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order Not Found"));
 
-            productOrderRepository.deleteById(id);
+        ProductClass product = order.getProduct();
 
-            return "Order Deleted Successfully";
+        // Restore Stock
+        product.setStockQuantity(
+                product.getStockQuantity() + order.getQuantity());
+
+        if (product.getStockQuantity() > 0) {
+            product.setStatus(ProductStatus.AVAILABLE);
         }
 
-        return "Order Not Found";
+        productRepository.save(product);
+
+        productOrderRepository.delete(order);
+
+        return "Order Deleted Successfully";
     }
-    
-    public List<ProductOrderClass> getOrdersByCustomer(String customerName) {
-        return productOrderRepository.findByCustomerNameContainingIgnoreCase(customerName);
+ // Search Orders
+    public List<ProductOrderClass> searchOrders(String name) {
+
+        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+        return productOrderRepository
+                .findByCustomerNameContainingIgnoreCase(name, pageable)
+                .getContent();
+
     }
 
+    // Pagination
+    public PaginationResponse<ProductOrderClass> getOrdersPagination(
+            int page,
+            int size
+    ) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<ProductOrderClass> orderPage =
+                productOrderRepository.findAll(pageable);
+
+        return new PaginationResponse<>(
+
+                orderPage.getContent(),
+
+                orderPage.getNumber(),
+
+                orderPage.getTotalPages(),
+
+                orderPage.getTotalElements(),
+
+                orderPage.getSize()
+
+        );
+
+    }
 }

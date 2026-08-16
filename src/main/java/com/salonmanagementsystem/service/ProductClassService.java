@@ -1,131 +1,471 @@
 package com.salonmanagementsystem.service;
 
-
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.salonmanagementsystem.constants.AppConstants;
+import com.salonmanagementsystem.dto.PaginationResponse;
 import com.salonmanagementsystem.entity.ProductClass;
+import com.salonmanagementsystem.entity.Salon;
+import com.salonmanagementsystem.enums.ProductStatus;
+import com.salonmanagementsystem.repository.ProductOrderRepository;
 import com.salonmanagementsystem.repository.ProductRepository;
-
+import com.salonmanagementsystem.repository.SalonRepository;
 
 @Service
 public class ProductClassService {
 
-
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ProductOrderRepository productOrderRepository;
+
+    @Autowired
+    private SalonRepository salonRepository;
 
 
-    // Add Product
-    public ProductClass addProduct(ProductClass productClass) {
+    // =========================================
+    // ADD PRODUCT
+    // =========================================
 
-        return productRepository.save(productClass);
+    public ProductClass addProduct(
+            ProductClass product,
+            Long salonId,
+            MultipartFile image)
+            throws IOException {
+
+        // =====================================
+        // FIND SALON
+        // =====================================
+
+        Salon salon =
+                salonRepository
+                        .findById(salonId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Salon Not Found"));
+
+
+        // =====================================
+        // CREATE UPLOAD FOLDER
+        // =====================================
+
+        File uploadFolder =
+                new File(
+                        AppConstants.PRODUCT_UPLOAD_DIR);
+
+        if (!uploadFolder.exists()) {
+
+            uploadFolder.mkdirs();
+
+        }
+
+
+        // =====================================
+        // IMAGE FILE
+        // =====================================
+
+        String fileName =
+                UUID.randomUUID()
+                        + "_"
+                        + image.getOriginalFilename();
+
+
+        Path filePath =
+                Paths.get(
+                        AppConstants.PRODUCT_UPLOAD_DIR,
+                        fileName);
+
+
+        Files.copy(
+                image.getInputStream(),
+                filePath,
+                StandardCopyOption.REPLACE_EXISTING);
+
+
+        // =====================================
+        // IMAGE URL
+        // =====================================
+
+        product.setImageUrl(
+                "/uploads/products/"
+                        + fileName);
+
+
+        // =====================================
+        // DEFAULT RATING
+        // =====================================
+
+        if (product.getRating() == null) {
+
+            product.setRating(0.0);
+
+        }
+
+
+        // =====================================
+        // DEFAULT REVIEW COUNT
+        // =====================================
+
+        if (product.getReviewCount() == null) {
+
+            product.setReviewCount(0);
+
+        }
+
+
+        // =====================================
+        // CONNECT PRODUCT → SALON
+        // =====================================
+
+        product.setSalon(salon);
+
+
+        // =====================================
+        // SAVE
+        // =====================================
+
+        return productRepository.save(product);
     }
 
 
+    // =========================================
+    // GET ALL PRODUCTS
+    // =========================================
 
-    // Get All Products
-    public List<ProductClass> getAllProducts(){
+    public List<ProductClass>
+    getAllProducts() {
 
         return productRepository.findAll();
+
     }
 
 
+    // =========================================
+    // GET PRODUCT BY ID
+    // =========================================
 
+    public ProductClass
+    getProductById(Long id) {
 
-    // Get Product By Id
-    public ProductClass getProductById(Long id){
-
-        return productRepository.findById(id)
+        return productRepository
+                .findById(id)
                 .orElse(null);
+
     }
 
 
+    // =========================================
+    // UPDATE PRODUCT
+    // =========================================
+
+    public ProductClass updateProduct(
+
+            Long id,
+
+            ProductClass updatedProduct,
+
+            Long salonId,
+
+            MultipartFile image)
+
+            throws IOException {
 
 
-    // Update Product
-    public ProductClass updateProduct(Long id,
-                                     ProductClass productClass){
-
+        // =====================================
+        // FIND EXISTING PRODUCT
+        // =====================================
 
         ProductClass existingProduct =
-                productRepository.findById(id)
-                .orElse(null);
+                productRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Product not found"));
 
 
+        // =====================================
+        // FIND SALON
+        // =====================================
 
-        if(existingProduct != null){
-
-
-            existingProduct.setProductName(
-                    productClass.getProductName());
-
-
-            existingProduct.setDescription(
-                    productClass.getDescription());
-
-
-            existingProduct.setCategory(
-                    productClass.getCategory());
+        Salon salon =
+                salonRepository
+                        .findById(salonId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Salon Not Found"));
 
 
-            existingProduct.setBrand(
-                    productClass.getBrand());
+        // =====================================
+        // UPDATE PRODUCT DETAILS
+        // =====================================
+
+        existingProduct.setProductName(
+                updatedProduct.getProductName());
+
+        existingProduct.setDescription(
+                updatedProduct.getDescription());
+
+        existingProduct.setCategory(
+                updatedProduct.getCategory());
+
+        existingProduct.setBrand(
+                updatedProduct.getBrand());
+
+        existingProduct.setPrice(
+                updatedProduct.getPrice());
+
+        existingProduct.setStockQuantity(
+                updatedProduct.getStockQuantity());
+
+        existingProduct.setStatus(
+                updatedProduct.getStatus());
 
 
-            existingProduct.setPrice(
-                    productClass.getPrice());
+        // =====================================
+        // UPDATE RATING
+        // =====================================
+
+        if (updatedProduct.getRating() != null) {
+
+            existingProduct.setRating(
+                    updatedProduct.getRating());
+
+        }
 
 
-            existingProduct.setStockQuantity(
-                    productClass.getStockQuantity());
+        // =====================================
+        // UPDATE REVIEW COUNT
+        // =====================================
 
+        if (updatedProduct.getReviewCount() != null) {
+
+            existingProduct.setReviewCount(
+                    updatedProduct.getReviewCount());
+
+        }
+
+
+        // =====================================
+        // CONNECT PRODUCT → SALON
+        // =====================================
+
+        existingProduct.setSalon(salon);
+
+
+        // =====================================
+        // UPDATE IMAGE
+        // =====================================
+
+        if (image != null &&
+                !image.isEmpty()) {
+
+
+            // Delete old image
+
+            if (existingProduct.getImageUrl() != null) {
+
+                File oldImage =
+                        new File(
+                                AppConstants.PRODUCT_UPLOAD_DIR
+                                        + existingProduct
+                                                .getImageUrl()
+                                                .replace(
+                                                        "/uploads/products/",
+                                                        ""));
+
+                if (oldImage.exists()) {
+
+                    oldImage.delete();
+
+                }
+
+            }
+
+
+            // Generate new filename
+
+            String fileName =
+                    UUID.randomUUID()
+                            + "_"
+                            + image.getOriginalFilename();
+
+
+            // Save new image
+
+            Path filePath =
+                    Paths.get(
+                            AppConstants.PRODUCT_UPLOAD_DIR,
+                            fileName);
+
+
+            Files.copy(
+                    image.getInputStream(),
+                    filePath,
+                    StandardCopyOption.REPLACE_EXISTING);
+
+
+            // Save new URL
 
             existingProduct.setImageUrl(
-                    productClass.getImageUrl());
-
-
-            existingProduct.setStatus(
-                    productClass.getStatus());
-
-
-
-            return productRepository.save(existingProduct);
+                    "/uploads/products/"
+                            + fileName);
 
         }
 
 
-        return null;
+        // =====================================
+        // SAVE
+        // =====================================
 
+        return productRepository
+                .save(existingProduct);
     }
 
 
+    // =========================================
+    // DELETE PRODUCT
+    // =========================================
+
+    public String deleteProduct(Long id) {
+
+        ProductClass product =
+                productRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Product Not Found"));
 
 
+        // =====================================
+        // CHECK PRODUCT ORDERS
+        // =====================================
 
-    // Delete Product
-    public String deleteProduct(Long id){
+        if (productOrderRepository
+                .existsByProductId(id)) {
+
+            product.setStatus(
+                    ProductStatus.DISCONTINUED);
+
+            productRepository.save(product);
+
+            return "Product has existing orders, "
+                    + "so it has been marked as "
+                    + "DISCONTINUED.";
+        }
 
 
-        if(productRepository.existsById(id)){
+        // =====================================
+        // DELETE IMAGE
+        // =====================================
 
+        if (product.getImageUrl() != null) {
 
-            productRepository.deleteById(id);
+            File imageFile =
+                    new File(
+                            AppConstants.PRODUCT_UPLOAD_DIR
+                                    + product.getImageUrl()
+                                            .replace(
+                                                    "/uploads/products/",
+                                                    ""));
 
+            if (imageFile.exists()) {
 
-            return "Product Deleted Successfully";
+                imageFile.delete();
+
+            }
 
         }
 
 
-        return "Product Not Found";
+        // =====================================
+        // DELETE PRODUCT
+        // =====================================
+
+        productRepository.delete(product);
+
+        return "Product Deleted Successfully";
+    }
+
+
+    // =========================================
+    // SEARCH PRODUCT
+    // =========================================
+
+    public List<ProductClass>
+    searchProduct(String name) {
+
+        return productRepository
+                .findByProductNameContainingIgnoreCase(
+                        name);
 
     }
-    
-    public List<ProductClass> searchProduct(String name) {
-        return productRepository.findByProductNameContainingIgnoreCase(name);
+
+
+    // =========================================
+    // PAGINATION
+    // =========================================
+
+    public PaginationResponse<ProductClass>
+    getProductsWithPagination(
+
+            int page,
+
+            int size) {
+
+
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size);
+
+
+        Page<ProductClass> productPage =
+                productRepository
+                        .findAll(pageable);
+
+
+        return new PaginationResponse<>(
+
+                productPage.getContent(),
+
+                productPage.getNumber(),
+
+                productPage.getTotalPages(),
+
+                productPage.getTotalElements(),
+
+                productPage.getSize()
+
+        );
     }
+
+
+    // =========================================
+    // GET PRODUCTS BY SALON
+    // =========================================
+
+    public List<ProductClass>
+    getProductsBySalon(
+            Long salonId) {
+
+        return productRepository
+                .findBySalonId(salonId);
+
+    }
+
 }

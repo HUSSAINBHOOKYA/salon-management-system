@@ -1,238 +1,303 @@
 package com.salonmanagementsystem.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.salonmanagementsystem.dto.PaginationResponse;
 import com.salonmanagementsystem.entity.EmployeeClass;
-import com.salonmanagementsystem.entity.ServiceClass;
+import com.salonmanagementsystem.entity.Salon;
+import com.salonmanagementsystem.entity.SalonService;
 import com.salonmanagementsystem.entity.TimeSlotClass;
+import com.salonmanagementsystem.enums.TimeSlotStatus;
 import com.salonmanagementsystem.repository.EmployeeRepository;
+import com.salonmanagementsystem.repository.SalonRepository;
 import com.salonmanagementsystem.repository.ServiceRepository;
 import com.salonmanagementsystem.repository.TimeSlotRepository;
 
 @Service
 public class TimeSlotClassService {
 
-    @Autowired
-    private TimeSlotRepository timeSlotRepository;
+	// =========================================
+	// REPOSITORIES
+	// =========================================
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
-    
-    
-    
-    @Autowired
-    private ServiceRepository serviceRepository;
+	@Autowired
+	private TimeSlotRepository timeSlotRepository;
 
-    // Add Time Slot
-    public TimeSlotClass addTimeSlot(TimeSlotClass timeSlotClass) {
+	@Autowired
+	private EmployeeRepository employeeRepository;
 
-        EmployeeClass employee = employeeRepository
-                .findById(timeSlotClass.getEmployee().getId())
-                .orElseThrow(() -> new RuntimeException("Employee Not Found"));
+	@Autowired
+	private ServiceRepository serviceRepository;
 
+	@Autowired
+	private SalonRepository salonRepository;
 
-        ServiceClass service = serviceRepository
-                .findById(timeSlotClass.getService().getId())
-                .orElseThrow(() -> new RuntimeException("Service Not Found"));
+	// =========================================
+	// ADD TIME SLOT
+	// =========================================
 
+	public TimeSlotClass addTimeSlot(TimeSlotClass timeSlotClass) {
 
-        Optional<TimeSlotClass> existingSlot =
-                timeSlotRepository.findByEmployeeIdAndSlotDateAndSlotTime(
-                        employee.getId(),
-                        timeSlotClass.getSlotDate(),
-                        timeSlotClass.getSlotTime()
-                );
+		// =====================================
+		// FIND EMPLOYEE
+		// =====================================
 
+		EmployeeClass employee = employeeRepository.findById(timeSlotClass.getEmployee().getId())
+				.orElseThrow(() -> new RuntimeException("Employee Not Found"));
 
-        if(existingSlot.isPresent()) {
-            throw new RuntimeException("This time slot already exists.");
-        }
+		// =====================================
+		// FIND SERVICE
+		// =====================================
 
+		SalonService service = serviceRepository.findById(timeSlotClass.getSalonService().getId())
+				.orElseThrow(() -> new RuntimeException("Service Not Found"));
 
-        timeSlotClass.setEmployee(employee);
-        timeSlotClass.setService(service);
+		// =====================================
+		// FIND SALON
+		// =====================================
 
+		Salon salon = salonRepository.findById(timeSlotClass.getSalon().getId())
+				.orElseThrow(() -> new RuntimeException("Salon Not Found"));
 
-        return timeSlotRepository.save(timeSlotClass);
-    }
+		// =====================================
+		// CHECK DUPLICATE SLOT
+		// =====================================
 
-    // Get All Time Slots
-    public List<TimeSlotClass> getAllTimeSlots() {
-        return timeSlotRepository.findAll();
-    }
+		Optional<TimeSlotClass> existingSlot = timeSlotRepository.findByEmployeeIdAndSlotDateAndSlotTime(
+				employee.getId(), timeSlotClass.getSlotDate(), timeSlotClass.getSlotTime());
 
-    // Get Time Slot By Id
-    public TimeSlotClass getTimeSlotById(Long id) {
-        return timeSlotRepository.findById(id).orElse(null);
-    }
+		if (existingSlot.isPresent()) {
 
-    // Update Time Slot
-    public TimeSlotClass updateTimeSlot(Long id, TimeSlotClass timeSlotClass) {
+			throw new RuntimeException("This Time Slot Already Exists.");
+		}
 
-        TimeSlotClass existingTimeSlot = timeSlotRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Time Slot Not Found"));
+		// =====================================
+		// CONNECT EMPLOYEE
+		// =====================================
 
-        EmployeeClass employee = employeeRepository
-                .findById(timeSlotClass.getEmployee().getId())
-                .orElseThrow(() -> new RuntimeException("Employee Not Found"));
+		timeSlotClass.setEmployee(employee);
 
-        Optional<TimeSlotClass> duplicateSlot = timeSlotRepository
-                .findByEmployeeIdAndSlotDateAndSlotTime(
-                        employee.getId(),
-                        timeSlotClass.getSlotDate(),
-                        timeSlotClass.getSlotTime());
+		// =====================================
+		// CONNECT SERVICE
+		// =====================================
 
-        if (duplicateSlot.isPresent() && !duplicateSlot.get().getId().equals(id)) {
-            throw new RuntimeException("This time slot already exists.");
-        }
+		timeSlotClass.setSalonService(service);
 
-        existingTimeSlot.setSlotDate(timeSlotClass.getSlotDate());
-        existingTimeSlot.setSlotTime(timeSlotClass.getSlotTime());
-        existingTimeSlot.setSlotStatus(timeSlotClass.getSlotStatus());
-        existingTimeSlot.setEmployee(employee);
+		// =====================================
+		// CONNECT SALON
+		// =====================================
 
-        return timeSlotRepository.save(existingTimeSlot);
-    }
+		timeSlotClass.setSalon(salon);
 
-    // Delete Time Slot
-    public String deleteTimeSlot(Long id) {
+		// =====================================
+		// SAVE
+		// =====================================
 
-        if (timeSlotRepository.existsById(id)) {
-            timeSlotRepository.deleteById(id);
-            return "Time Slot Deleted Successfully";
-        }
+		return timeSlotRepository.save(timeSlotClass);
+	}
 
-        return "Time Slot Not Found";
-    }
-    
-    public List<TimeSlotClass> getAvailableSlots() {
-        return timeSlotRepository.findBySlotStatus("AVAILABLE");
-    }
+	// =========================================
+	// GET ALL TIME SLOTS
+	// =========================================
+
+	public List<TimeSlotClass> getAllTimeSlots() {
+
+		return timeSlotRepository.findAll();
+	}
+
+	// =========================================
+	// GET TIME SLOT BY ID
+	// =========================================
+
+	public TimeSlotClass getTimeSlotById(Long id) {
+
+		return timeSlotRepository.findById(id).orElseThrow(() -> new RuntimeException("Time Slot Not Found"));
+	}
+
+	// =========================================
+	// UPDATE TIME SLOT
+	// =========================================
+
+	public TimeSlotClass updateTimeSlot(Long id, TimeSlotClass timeSlotClass) {
+
+		// =====================================
+		// FIND EXISTING TIME SLOT
+		// =====================================
+
+		TimeSlotClass existingTimeSlot = timeSlotRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Time Slot Not Found"));
+
+		// =====================================
+		// FIND EMPLOYEE
+		// =====================================
+
+		EmployeeClass employee = employeeRepository.findById(timeSlotClass.getEmployee().getId())
+				.orElseThrow(() -> new RuntimeException("Employee Not Found"));
+
+		// =====================================
+		// FIND SERVICE
+		// =====================================
+
+		SalonService service = serviceRepository.findById(timeSlotClass.getSalonService().getId())
+				.orElseThrow(() -> new RuntimeException("Service Not Found"));
+
+		// =====================================
+		// FIND SALON
+		// =====================================
+
+		Salon salon = salonRepository.findById(timeSlotClass.getSalon().getId())
+				.orElseThrow(() -> new RuntimeException("Salon Not Found"));
+
+		// =====================================
+		// CHECK DUPLICATE SLOT
+		// =====================================
+
+		Optional<TimeSlotClass> duplicateSlot = timeSlotRepository.findByEmployeeIdAndSlotDateAndSlotTime(
+				employee.getId(), timeSlotClass.getSlotDate(), timeSlotClass.getSlotTime());
+
+		if (duplicateSlot.isPresent() && !duplicateSlot.get().getId().equals(id)) {
+
+			throw new RuntimeException("This Time Slot Already Exists.");
+		}
+
+		// =====================================
+		// UPDATE DATE
+		// =====================================
+
+		existingTimeSlot.setSlotDate(timeSlotClass.getSlotDate());
+
+		// =====================================
+		// UPDATE TIME
+		// =====================================
+
+		existingTimeSlot.setSlotTime(timeSlotClass.getSlotTime());
+
+		// =====================================
+		// UPDATE STATUS
+		// =====================================
+
+		existingTimeSlot.setSlotStatus(timeSlotClass.getSlotStatus());
+
+		// =====================================
+		// UPDATE EMPLOYEE
+		// =====================================
+
+		existingTimeSlot.setEmployee(employee);
+
+		// =====================================
+		// UPDATE SERVICE
+		// =====================================
+
+		existingTimeSlot.setSalonService(service);
+
+		// =====================================
+		// UPDATE SALON
+		// =====================================
+
+		existingTimeSlot.setSalon(salon);
+
+		// =====================================
+		// SAVE
+		// =====================================
+
+		return timeSlotRepository.save(existingTimeSlot);
+	}
+
+	// =========================================
+	// DELETE TIME SLOT
+	// =========================================
+
+	public String deleteTimeSlot(Long id) {
+
+		TimeSlotClass timeSlot = timeSlotRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Time Slot Not Found"));
+
+		timeSlotRepository.delete(timeSlot);
+
+		return "Time Slot Deleted Successfully";
+	}
+
+	// =========================================
+	// AVAILABLE TIME SLOTS
+	// =========================================
+
+	public List<TimeSlotClass> getAvailableSlots() {
+
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+		return timeSlotRepository.findBySlotStatus(TimeSlotStatus.AVAILABLE, pageable).getContent();
+	}
+
+	// =========================================
+	// SEARCH TIME SLOTS
+	// =========================================
+
+	public List<TimeSlotClass> searchTimeSlots(String slotTime) {
+
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+		return timeSlotRepository.findBySlotTimeContainingIgnoreCase(slotTime, pageable).getContent();
+	}
+
+	// =========================================
+	// PAGINATION
+	// =========================================
+
+	public PaginationResponse<TimeSlotClass> getTimeSlotPagination(int page, int size) {
+
+		Pageable pageable = PageRequest.of(page, size);
+
+		Page<TimeSlotClass> slotPage = timeSlotRepository.findAll(pageable);
+
+		return new PaginationResponse<>(
+
+				slotPage.getContent(),
+
+				slotPage.getNumber(),
+
+				slotPage.getTotalPages(),
+
+				slotPage.getTotalElements(),
+
+				slotPage.getSize());
+	}
+
+	// =========================================
+	// FILTER BY STATUS
+	// =========================================
+
+	public List<TimeSlotClass> getSlotsByStatus(TimeSlotStatus status) {
+
+		Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+		return timeSlotRepository.findBySlotStatus(status, pageable).getContent();
+	}
+	// =========================================
+	// GET TIME SLOTS BY SALON
+	// =========================================
+
+	public List<TimeSlotClass> getTimeSlotsBySalon(Long salonId) {
+
+		return timeSlotRepository.findBySalonId(salonId);
+	}
+
+//=========================================
+//GET AVAILABLE SLOTS
+//BY SALON + EMPLOYEE + DATE
+//=========================================
+
+	public List<TimeSlotClass> getAvailableSlotsBySalonEmployeeDate(Long salonId, Long employeeId, LocalDate date) {
+
+		return timeSlotRepository
+				.findBySalonIdAndEmployeeIdAndSlotDateAndSlotStatus(salonId, employeeId, date,
+				TimeSlotStatus.AVAILABLE);
+	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//package UseProjectAuthenticationandAuthorization.simple.service;
-//
-//import java.util.List;
-//import java.util.Optional;
-//
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//
-//import UseProjectAuthenticationandAuthorization.simple.entity.EmployeeClass;
-//import UseProjectAuthenticationandAuthorization.simple.entity.TimeSlotClass;
-//import UseProjectAuthenticationandAuthorization.simple.repository.EmployeeRepository;
-//import UseProjectAuthenticationandAuthorization.simple.repository.TimeSlotRepository;
-//
-//@Service
-//public class TimeSlotClassService {
-//
-//    @Autowired
-//    private TimeSlotRepository timeSlotRepository;
-//
-//    @Autowired
-//    private EmployeeRepository employeeRepository;
-//
-//    // Add Time Slot
-//    
-//    public TimeSlotClass addTimeSlot(TimeSlotClass timeSlotClass) {
-//
-//        EmployeeClass employee = employeeRepository
-//                .findById(timeSlotClass.getEmployee().getId())
-//                .orElseThrow(() -> new RuntimeException("Employee Not Found"));
-//
-//        Optional<TimeSlotClass> existingSlot = timeSlotRepository
-//                .findByEmployeeIdAndSlotDateAndSlotTime(
-//                        employee.getId(),
-//                        timeSlotClass.getSlotDate(),
-//                        timeSlotClass.getSlotTime());
-//
-//        if (existingSlot.isPresent()) {
-//            throw new RuntimeException("This time slot already exists.");
-//        }
-//
-//        timeSlotClass.setEmployee(employee);
-//
-//        return timeSlotRepository.save(timeSlotClass);
-//    }
-//    
-//    
-////    public TimeSlotClass addTimeSlot(TimeSlotClass timeSlotClass) {
-////
-////        EmployeeClass employee = employeeRepository
-////                .findById(timeSlotClass.getEmployee().getId())
-////                .orElseThrow(() -> new RuntimeException("Employee Not Found"));
-////
-////        timeSlotClass.setEmployee(employee);
-////
-////        return timeSlotRepository.save(timeSlotClass);
-////    }
-//
-//    // Get All Time Slots
-//    public List<TimeSlotClass> getAllTimeSlots() {
-//        return timeSlotRepository.findAll();
-//    }
-//
-//    // Get Time Slot By Id
-//    public TimeSlotClass getTimeSlotById(Long id) {
-//        return timeSlotRepository.findById(id).orElse(null);
-//    }
-//
-//    // Update Time Slot
-//    public TimeSlotClass updateTimeSlot(Long id, TimeSlotClass timeSlotClass) {
-//
-//        TimeSlotClass existingTimeSlot = timeSlotRepository.findById(id).orElse(null);
-//
-//        if (existingTimeSlot != null) {
-//
-//            EmployeeClass employee = employeeRepository
-//                    .findById(timeSlotClass.getEmployee().getId())
-//                    .orElseThrow(() -> new RuntimeException("Employee Not Found"));
-//
-//            existingTimeSlot.setSlotDate(timeSlotClass.getSlotDate());
-//            existingTimeSlot.setSlotTime(timeSlotClass.getSlotTime());
-//            existingTimeSlot.setSlotStatus(timeSlotClass.getSlotStatus());
-//            existingTimeSlot.setEmployee(employee);
-//
-//            return timeSlotRepository.save(existingTimeSlot);
-//        }
-//
-//        return null;
-//    }
-//
-//    // Delete Time Slot
-//    public String deleteTimeSlot(Long id) {
-//
-//        if (timeSlotRepository.existsById(id)) {
-//
-//            timeSlotRepository.deleteById(id);
-//
-//            return "Time Slot Deleted Successfully";
-//        }
-//
-//        return "Time Slot Not Found";
-//    }
-//}

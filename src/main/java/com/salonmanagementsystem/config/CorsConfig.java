@@ -16,7 +16,7 @@ public class CorsConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-//        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+//        configuration.setAllowedOrigins(List.of("http://localhost:5179"));
         // Allow all localhost ports (5173, 5174, 5177, etc.)
         configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
         

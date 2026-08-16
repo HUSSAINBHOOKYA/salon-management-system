@@ -2,7 +2,11 @@ package com.salonmanagementsystem.entity;
 
 import java.time.LocalDate;
 
+import com.salonmanagementsystem.enums.PaymentStatus;
+
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,30 +24,36 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BillClass {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String customerName;
+	private String billNumber;
 
-    private Double serviceAmount;
+	private String customerName;
 
-    private Double productAmount;
+	private String customerPhone;
 
-    private Double totalAmount;
+	private String customerEmail;
 
-    private String paymentMethod;
+	private Double serviceAmount;
 
-    private String paymentStatus;
+	private Double productAmount;
 
-    private LocalDate billDate;
+	private Double totalAmount;
 
-    @ManyToOne
-    @JoinColumn(name = "appointment_id")
-    private AppointmentClass appointment;
+	private String paymentMethod;
 
-    @ManyToOne
-    @JoinColumn(name = "product_order_id")
-    private ProductOrderClass productOrder;
+	@Enumerated(EnumType.STRING)
+	private PaymentStatus paymentStatus;
 
+	private LocalDate billDate;
+
+	@ManyToOne
+	@JoinColumn(name = "appointment_id")
+	private AppointmentClass appointment;
+
+	@ManyToOne
+	@JoinColumn(name = "product_order_id")
+	private ProductOrderClass productOrder;
 }
