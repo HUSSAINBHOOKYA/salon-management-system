@@ -5,18 +5,20 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.salonmanagementsystem.entity.SalonService;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.enums.ServiceStatus;
 
 public interface ServiceRepository
         extends JpaRepository<SalonService, Long> {
-
 
     // =========================================
     // SALON FILTER
     // =========================================
 
     List<SalonService>
-    findBySalonId(Long salonId);
+    findBySalonId(
+            Long salonId
+    );
 
 
     // =========================================
@@ -35,6 +37,29 @@ public interface ServiceRepository
     // =========================================
 
     List<SalonService>
-    findByEmployeesId(Long employeeId);
+    findByEmployeesId(
+            Long employeeId
+    );
+
+
+    // =========================================
+    // GENDER FILTER
+    // =========================================
+
+    List<SalonService>
+    findByGender(
+            Gender gender
+    );
+
+
+    // =========================================
+    // GENDER + STATUS
+    // =========================================
+
+    List<SalonService>
+    findByGenderAndStatus(
+            Gender gender,
+            ServiceStatus status
+    );
 
 }

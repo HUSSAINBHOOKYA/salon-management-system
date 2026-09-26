@@ -3,6 +3,8 @@ package com.salonmanagementsystem.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.salonmanagementsystem.dto.AdminBillResponse;
 import com.salonmanagementsystem.dto.PaginationResponse;
 import com.salonmanagementsystem.entity.BillClass;
 import com.salonmanagementsystem.enums.PaymentStatus;
@@ -25,107 +28,156 @@ public class BillClassController {
     @Autowired
     private BillClassService billClassService;
 
-    // ============================
-    // Add Bill
-    // ============================
+
+    // =========================================================
+    // ADD BILL
+    // =========================================================
+
     @PostMapping("/add")
-    public BillClass addBill(@RequestBody BillClass billClass) {
+    public BillClass addBill(
+            @RequestBody BillClass billClass
+    ) {
 
-        return billClassService.addBill(billClass);
-
+        return billClassService.addBill(
+                billClass
+        );
     }
 
-    // ============================
-    // Get All Bills
-    // ============================
+
+    // =========================================================
+    // ADMIN - GET ALL BILLS
+    // =========================================================
+
     @GetMapping("/all")
-    public List<BillClass> getAllBills() {
+    public List<AdminBillResponse> getAllBills() {
 
         return billClassService.getAllBills();
-
     }
 
-    // ============================
-    // Get Bill By Id
-    // ============================
+
+    // =========================================================
+    // CUSTOMER - GET MY BILLS
+    // =========================================================
+
+    @GetMapping("/my")
+    public List<AdminBillResponse> getMyBills(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+
+        return billClassService.getMyBills(
+                userDetails.getUsername()
+        );
+    }
+
+
+    // =========================================================
+    // PARTNER - GET MY SALON BILLS
+    // =========================================================
+
+    @GetMapping("/partner")
+    public List<AdminBillResponse> getPartnerBills(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+
+        return billClassService.getPartnerBills(
+                userDetails.getUsername()
+        );
+    }
+
+
+    // =========================================================
+    // GET BILL BY ID
+    // =========================================================
+
     @GetMapping("/{id}")
-    public BillClass getBillById(
+    public AdminBillResponse getBillById(
             @PathVariable Long id
     ) {
 
-        return billClassService.getBillById(id);
-
+        return billClassService.getBillById(
+                id
+        );
     }
 
-    // ============================
-    // Update Bill
-    // ============================
+
+    // =========================================================
+    // UPDATE BILL
+    // =========================================================
+
     @PutMapping("/update/{id}")
     public BillClass updateBill(
             @PathVariable Long id,
             @RequestBody BillClass billClass
     ) {
 
-        return billClassService.updateBill(id, billClass);
-
+        return billClassService.updateBill(
+                id,
+                billClass
+        );
     }
 
-    // ============================
-    // Delete Bill
-    // ============================
+
+    // =========================================================
+    // DELETE BILL
+    // =========================================================
+
     @DeleteMapping("/delete/{id}")
     public String deleteBill(
             @PathVariable Long id
     ) {
 
-        return billClassService.deleteBill(id);
-
+        return billClassService.deleteBill(
+                id
+        );
     }
 
-    // ============================
-    // Search Bills
-    // ============================
+
+    // =========================================================
+    // SEARCH BILLS
+    // =========================================================
+
     @GetMapping("/search")
     public List<BillClass> searchBills(
             @RequestParam String name
     ) {
 
-        return billClassService.searchBills(name);
-
+        return billClassService.searchBills(
+                name
+        );
     }
 
-    // ============================
-    // Pagination
-    // ============================
+
+    // =========================================================
+    // PAGINATION
+    // =========================================================
+
     @GetMapping("/pagination")
     public PaginationResponse<BillClass> getBillsPagination(
-
             @RequestParam(defaultValue = "0") int page,
-
             @RequestParam(defaultValue = "10") int size
-
     ) {
 
-        return billClassService.getBillsPagination(page, size);
-
+        return billClassService.getBillsPagination(
+                page,
+                size
+        );
     }
 
-    // ============================
-    // Payment Status Filter
-    // ============================
+
+    // =========================================================
+    // PAYMENT STATUS FILTER
+    // =========================================================
+
     @GetMapping("/payment/{status}")
     public List<BillClass> getBillsByPaymentStatus(
-
             @PathVariable PaymentStatus status
-
     ) {
 
-        return billClassService.getBillsByPaymentStatus(status);
-
+        return billClassService.getBillsByPaymentStatus(
+                status
+        );
     }
-
 }
-
 
 
 

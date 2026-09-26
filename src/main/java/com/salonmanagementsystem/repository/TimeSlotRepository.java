@@ -16,6 +16,7 @@ public interface TimeSlotRepository
 
     // =========================================
     // FIND DUPLICATE SLOT
+    // Employee + Date + Time
     // =========================================
 
     Optional<TimeSlotClass> findByEmployeeIdAndSlotDateAndSlotTime(

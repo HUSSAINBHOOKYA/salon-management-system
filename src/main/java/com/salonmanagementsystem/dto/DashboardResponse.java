@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DashboardResponse {
 
+    private Long totalCategories;
+
     private Long totalEmployees;
 
     private Long totalServices;

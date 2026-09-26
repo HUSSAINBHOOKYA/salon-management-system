@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.enums.ServiceStatus;
 
 import jakarta.persistence.Entity;
@@ -20,7 +21,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "service_table")
@@ -32,7 +35,6 @@ public class SalonService {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     // =========================================
     // SERVICE DETAILS
@@ -48,6 +50,12 @@ public class SalonService {
 
     private Integer duration;
 
+    // =========================================
+    // SERVICE GENDER
+    // =========================================
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     // =========================================
     // SERVICE → CATEGORY
@@ -59,8 +67,9 @@ public class SalonService {
             nullable = false
     )
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Category category;
-
 
     // =========================================
     // SERVICE → SALON
@@ -69,8 +78,9 @@ public class SalonService {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salon_id")
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Salon salon;
-
 
     // =========================================
     // SERVICE STATUS
@@ -79,14 +89,11 @@ public class SalonService {
     @Enumerated(EnumType.STRING)
     private ServiceStatus status;
 
-
     // =========================================
     // SERVICE ↔ EMPLOYEE
     // =========================================
 
-    @ManyToMany(
-            fetch = FetchType.LAZY
-    )
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "employee_service_table",
 
@@ -99,6 +106,8 @@ public class SalonService {
             )
     )
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<EmployeeClass> employees =
             new HashSet<>();
 

@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,36 +25,75 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BillClass {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    // =========================================================
+    // BILL ID
+    // =========================================================
 
-	private String billNumber;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	private String customerName;
 
-	private String customerPhone;
+    // =========================================================
+    // BILL NUMBER
+    // =========================================================
 
-	private String customerEmail;
+    private String billNumber;
 
-	private Double serviceAmount;
 
-	private Double productAmount;
+    // =========================================================
+    // CUSTOMER DETAILS
+    // =========================================================
 
-	private Double totalAmount;
+    private String customerName;
 
-	private String paymentMethod;
+    private String customerPhone;
 
-	@Enumerated(EnumType.STRING)
-	private PaymentStatus paymentStatus;
+    private String customerEmail;
 
-	private LocalDate billDate;
 
-	@ManyToOne
-	@JoinColumn(name = "appointment_id")
-	private AppointmentClass appointment;
+    // =========================================================
+    // AMOUNTS
+    // =========================================================
 
-	@ManyToOne
-	@JoinColumn(name = "product_order_id")
-	private ProductOrderClass productOrder;
+    private Double serviceAmount;
+
+    private Double productAmount;
+
+    private Double totalAmount;
+
+
+    // =========================================================
+    // PAYMENT
+    // =========================================================
+
+    private String paymentMethod;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+
+    // =========================================================
+    // BILL DATE
+    // =========================================================
+
+    private LocalDate billDate;
+
+
+    // =========================================================
+    // APPOINTMENT
+    // =========================================================
+
+    @ManyToOne
+    @JoinColumn(name = "appointment_id")
+    private AppointmentClass appointment;
+
+
+    // =========================================================
+    // PRODUCT ORDER
+    // =========================================================
+
+    @ManyToOne
+    @JoinColumn(name = "product_order_id")
+    private ProductOrderClass productOrder;
 }

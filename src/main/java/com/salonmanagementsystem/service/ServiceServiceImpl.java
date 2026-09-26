@@ -6,497 +6,409 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.salonmanagementsystem.dto.EmployeeServiceResponse;
 import com.salonmanagementsystem.dto.ServiceRequest;
 import com.salonmanagementsystem.dto.ServiceResponse;
 import com.salonmanagementsystem.entity.Category;
+import com.salonmanagementsystem.entity.EmployeeClass;
 import com.salonmanagementsystem.entity.Salon;
 import com.salonmanagementsystem.entity.SalonService;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.exception.BadRequestException;
 import com.salonmanagementsystem.exception.ResourceNotFoundException;
 import com.salonmanagementsystem.repository.CategoryRepository;
+import com.salonmanagementsystem.repository.EmployeeRepository;
 import com.salonmanagementsystem.repository.SalonRepository;
 import com.salonmanagementsystem.repository.ServiceRepository;
 import com.salonmanagementsystem.util.FileUploadUtil;
 
 @Service
-public class ServiceServiceImpl
-        implements ServiceService {
+public class ServiceServiceImpl implements ServiceService {
 
+	private final ServiceRepository serviceRepository;
 
-    private final ServiceRepository serviceRepository;
+	private final CategoryRepository categoryRepository;
 
-    private final CategoryRepository categoryRepository;
+	private final SalonRepository salonRepository;
 
-    private final SalonRepository salonRepository;
+	private final EmployeeRepository employeeRepository;
 
-    private final FileUploadUtil fileUploadUtil;
+	private final FileUploadUtil fileUploadUtil;
 
+	public ServiceServiceImpl(ServiceRepository serviceRepository, CategoryRepository categoryRepository,
+			SalonRepository salonRepository, EmployeeRepository employeeRepository, FileUploadUtil fileUploadUtil) {
 
-    public ServiceServiceImpl(
+		this.serviceRepository = serviceRepository;
 
-            ServiceRepository serviceRepository,
+		this.categoryRepository = categoryRepository;
 
-            CategoryRepository categoryRepository,
+		this.salonRepository = salonRepository;
 
-            SalonRepository salonRepository,
+		this.employeeRepository = employeeRepository;
 
-            FileUploadUtil fileUploadUtil
-    ) {
+		this.fileUploadUtil = fileUploadUtil;
+	}
 
-        this.serviceRepository =
-                serviceRepository;
+	// =========================================
+	// ADD SERVICE
+	// =========================================
 
-        this.categoryRepository =
-                categoryRepository;
+	@Override
+	public ServiceResponse addService(ServiceRequest request) {
 
-        this.salonRepository =
-                salonRepository;
+		try {
 
-        this.fileUploadUtil =
-                fileUploadUtil;
-    }
+			// =================================
+			// FIND CATEGORY
+			// =================================
 
+			Category category = categoryRepository.findById(request.getCategoryId())
+					.orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
 
-    // =========================================
-    // ADD SERVICE
-    // =========================================
+			// =================================
+			// FIND SALON
+			// =================================
 
-    @Override
-    public ServiceResponse addService(
-            ServiceRequest request
-    ) {
+			Salon salon = salonRepository.findById(request.getSalonId())
+					.orElseThrow(() -> new ResourceNotFoundException("Salon Not Found"));
 
-        try {
+			// =================================
+			// UPLOAD IMAGE
+			// =================================
 
+			String imageUrl = fileUploadUtil.uploadFile(request.getImage(), "services");
 
-            // =================================
-            // FIND CATEGORY
-            // =================================
+			// =================================
+			// CREATE SERVICE
+			// =================================
 
-            Category category =
-                    categoryRepository
-                            .findById(
-                                    request.getCategoryId()
-                            )
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Category Not Found"
-                                    ));
+			SalonService service = new SalonService();
 
+			service.setServiceName(request.getServiceName());
 
-            // =================================
-            // FIND SALON
-            // =================================
+			service.setDescription(request.getDescription());
 
-            Salon salon =
-                    salonRepository
-                            .findById(
-                                    request.getSalonId()
-                            )
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Salon Not Found"
-                                    ));
+			service.setPrice(request.getPrice());
 
+			service.setDuration(request.getDuration());
 
-            // =================================
-            // UPLOAD IMAGE
-            // =================================
+			// =================================
+			// SERVICE GENDER
+			// =================================
 
-            String imageUrl =
-                    fileUploadUtil.uploadFile(
-                            request.getImage(),
-                            "services"
-                    );
+			service.setGender(request.getGender());
 
+			service.setStatus(request.getStatus());
 
-            // =================================
-            // CREATE SERVICE
-            // =================================
+			service.setImageUrl(imageUrl);
 
-            SalonService service =
-                    new SalonService();
+			service.setCategory(category);
 
+			service.setSalon(salon);
 
-            service.setServiceName(
-                    request.getServiceName()
-            );
+			// =================================
+			// SAVE
+			// =================================
 
-            service.setDescription(
-                    request.getDescription()
-            );
+			SalonService savedService = serviceRepository.save(service);
 
-            service.setPrice(
-                    request.getPrice()
-            );
+			return mapToResponse(savedService);
 
-            service.setDuration(
-                    request.getDuration()
-            );
+		} catch (IOException e) {
 
-            service.setStatus(
-                    request.getStatus()
-            );
+			throw new BadRequestException("Unable to upload service image.");
+		}
+	}
 
-            service.setImageUrl(
-                    imageUrl
-            );
+	// =========================================
+	// GET ALL SERVICES
+	// =========================================
 
-            service.setCategory(
-                    category
-            );
+	@Override
+	public List<ServiceResponse> getAllServices() {
 
-            service.setSalon(
-                    salon
-            );
+		return serviceRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+	}
 
+	// =========================================
+	// GET SERVICE BY ID
+	// =========================================
 
-            // =================================
-            // SAVE
-            // =================================
+	@Override
+	public ServiceResponse getServiceById(Long id) {
 
-            SalonService savedService =
-                    serviceRepository.save(service);
+		SalonService service = serviceRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Service Not Found"));
 
+		return mapToResponse(service);
+	}
 
-            return mapToResponse(
-                    savedService
-            );
+	// =========================================
+	// GET SERVICES BY SALON
+	// =========================================
 
+	@Override
+	public List<ServiceResponse> getServicesBySalon(Long salonId) {
 
-        } catch (IOException e) {
+		salonRepository.findById(salonId).orElseThrow(() -> new ResourceNotFoundException("Salon Not Found"));
 
-            throw new BadRequestException(
-                    "Unable to upload service image."
-            );
+		return serviceRepository.findBySalonId(salonId).stream().map(this::mapToResponse).collect(Collectors.toList());
+	}
 
-        }
+	// =========================================
+	// GET SERVICES BY EMPLOYEE
+	// =========================================
 
-    }
+	@Override
+	public List<ServiceResponse> getServicesByEmployee(Long employeeId) {
 
+		return serviceRepository.findByEmployeesId(employeeId).stream().map(this::mapToResponse)
+				.collect(Collectors.toList());
+	}
 
-    // =========================================
-    // GET ALL SERVICES
-    // =========================================
+	// =========================================
+	// UPDATE SERVICE
+	// =========================================
 
-    @Override
-    public List<ServiceResponse>
-    getAllServices() {
+	@Override
+	public ServiceResponse updateService(Long id, ServiceRequest request) {
 
-        return serviceRepository
-                .findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+		try {
 
-    }
+			// =================================
+			// FIND SERVICE
+			// =================================
 
+			SalonService service = serviceRepository.findById(id)
+					.orElseThrow(() -> new ResourceNotFoundException("Service Not Found"));
 
-    // =========================================
-    // GET SERVICE BY ID
-    // =========================================
+			// =================================
+			// FIND CATEGORY
+			// =================================
 
-    @Override
-    public ServiceResponse getServiceById(
-            Long id
-    ) {
+			Category category = categoryRepository.findById(request.getCategoryId())
+					.orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
 
-        SalonService service =
-                serviceRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Service Not Found"
-                                ));
+			// =================================
+			// FIND SALON
+			// =================================
 
-        return mapToResponse(service);
+			Salon salon = salonRepository.findById(request.getSalonId())
+					.orElseThrow(() -> new ResourceNotFoundException("Salon Not Found"));
 
-    }
+			// =================================
+			// UPDATE DETAILS
+			// =================================
 
+			service.setServiceName(request.getServiceName());
 
-    // =========================================
-    // GET SERVICES BY SALON
-    // =========================================
+			service.setDescription(request.getDescription());
 
-    @Override
-    public List<ServiceResponse>
-    getServicesBySalon(
-            Long salonId
-    ) {
+			service.setPrice(request.getPrice());
 
+			service.setDuration(request.getDuration());
 
-        // Check salon
+			// =================================
+			// UPDATE SERVICE GENDER
+			// =================================
 
-        salonRepository
-                .findById(salonId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Salon Not Found"
-                        ));
+			service.setGender(request.getGender());
 
+			service.setStatus(request.getStatus());
 
-        return serviceRepository
-                .findBySalonId(salonId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+			service.setCategory(category);
 
-    }
+			service.setSalon(salon);
 
+			// =================================
+			// UPDATE IMAGE
+			// =================================
 
-    // =========================================
-    // GET SERVICES BY EMPLOYEE
-    // =========================================
+			if (request.getImage() != null && !request.getImage().isEmpty()) {
 
-    @Override
-    public List<ServiceResponse>
-    getServicesByEmployee(
-            Long employeeId
-    ) {
+				String imageUrl = fileUploadUtil.uploadFile(request.getImage(), "services");
 
-        return serviceRepository
-                .findByEmployeesId(employeeId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+				service.setImageUrl(imageUrl);
+			}
 
-    }
+			// =================================
+			// SAVE
+			// =================================
 
+			SalonService updatedService = serviceRepository.save(service);
 
-    // =========================================
-    // UPDATE SERVICE
-    // =========================================
+			return mapToResponse(updatedService);
 
-    @Override
-    public ServiceResponse updateService(
-            Long id,
-            ServiceRequest request
-    ) {
+		} catch (IOException e) {
 
-        try {
+			throw new BadRequestException("Unable to upload service image.");
+		}
+	}
 
+	// =========================================
+	// DELETE SERVICE
+	// =========================================
 
-            // =================================
-            // FIND SERVICE
-            // =================================
+	@Override
+	public void deleteService(Long id) {
 
-            SalonService service =
-                    serviceRepository
-                            .findById(id)
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Service Not Found"
-                                    ));
+		SalonService service = serviceRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Service Not Found"));
 
+		serviceRepository.delete(service);
+	}
 
-            // =================================
-            // FIND CATEGORY
-            // =================================
+	// =========================================
+	// GET EMPLOYEES BY SERVICE
+	// =========================================
 
-            Category category =
-                    categoryRepository
-                            .findById(
-                                    request.getCategoryId()
-                            )
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Category Not Found"
-                                    ));
+	@Override
+	public List<EmployeeServiceResponse> getEmployeesByService(Long serviceId) {
 
+		// =========================================
+		// CHECK SERVICE EXISTS
+		// =========================================
 
-            // =================================
-            // FIND SALON
-            // =================================
+		serviceRepository.findById(serviceId).orElseThrow(() -> new ResourceNotFoundException("Service Not Found"));
 
-            Salon salon =
-                    salonRepository
-                            .findById(
-                                    request.getSalonId()
-                            )
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Salon Not Found"
-                                    ));
+		// =========================================
+		// FIND EMPLOYEES
+		// =========================================
 
+		List<EmployeeClass> employees = employeeRepository.findByServicesId(serviceId);
 
-            // =================================
-            // UPDATE DETAILS
-            // =================================
+		// =========================================
+		// CONVERT TO RESPONSE
+		// =========================================
 
-            service.setServiceName(
-                    request.getServiceName()
-            );
+		return employees.stream().map(this::mapEmployeeToResponse).collect(Collectors.toList());
+	}
 
-            service.setDescription(
-                    request.getDescription()
-            );
+	// =========================================
+	// EMPLOYEE ENTITY → RESPONSE
+	// =========================================
 
-            service.setPrice(
-                    request.getPrice()
-            );
+	private EmployeeServiceResponse mapEmployeeToResponse(EmployeeClass employee) {
 
-            service.setDuration(
-                    request.getDuration()
-            );
+		EmployeeServiceResponse response = new EmployeeServiceResponse();
 
-            service.setStatus(
-                    request.getStatus()
-            );
+		// =========================================
+		// EMPLOYEE DETAILS
+		// =========================================
 
-            service.setCategory(
-                    category
-            );
+		response.setId(employee.getId());
 
-            service.setSalon(
-                    salon
-            );
+		response.setEmployeeName(employee.getEmployeeName());
 
+		response.setEmployeeEmail(employee.getEmployeeEmail());
 
-            // =================================
-            // UPDATE IMAGE
-            // =================================
+		response.setSpecialization(employee.getSpecialization());
 
-            if (request.getImage() != null &&
-                    !request.getImage().isEmpty()) {
+		response.setPhoneNumber(employee.getPhoneNumber());
 
-                String imageUrl =
-                        fileUploadUtil.uploadFile(
-                                request.getImage(),
-                                "services"
-                        );
+		response.setExperience(employee.getExperience());
 
-                service.setImageUrl(
-                        imageUrl
-                );
+		response.setSalary(employee.getSalary());
 
-            }
+		response.setDescription(employee.getDescription());
 
+		// =========================================
+		// RATING
+		// =========================================
 
-            // =================================
-            // SAVE
-            // =================================
+		response.setRating(employee.getRating());
 
-            SalonService updatedService =
-                    serviceRepository.save(service);
+		response.setReviewCount(employee.getReviewCount());
 
+		// =========================================
+		// IMAGE
+		// =========================================
 
-            return mapToResponse(
-                    updatedService
-            );
+		response.setImageUrl(employee.getImageUrl());
 
+		// =========================================
+		// STATUS
+		// =========================================
 
-        } catch (IOException e) {
+		response.setStatus(employee.getStatus());
 
-            throw new BadRequestException(
-                    "Unable to upload service image."
-            );
+		// =========================================
+		// SALON
+		// =========================================
 
-        }
+		if (employee.getSalon() != null) {
 
-    }
+			response.setSalonId(employee.getSalon().getId());
 
+			response.setSalonName(employee.getSalon().getSalonName());
+		}
 
-    // =========================================
-    // DELETE SERVICE
-    // =========================================
+		return response;
+	}
 
-    @Override
-    public void deleteService(
-            Long id
-    ) {
+	// =========================================
+	// ENTITY → SERVICE RESPONSE
+	// =========================================
 
-        SalonService service =
-                serviceRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Service Not Found"
-                                ));
+	private ServiceResponse mapToResponse(SalonService service) {
 
+		ServiceResponse response = new ServiceResponse();
 
-        serviceRepository.delete(service);
+		response.setId(service.getId());
 
-    }
+		response.setServiceName(service.getServiceName());
 
+		response.setDescription(service.getDescription());
 
-    // =========================================
-    // ENTITY → RESPONSE
-    // =========================================
+		response.setPrice(service.getPrice());
 
-    private ServiceResponse mapToResponse(
-            SalonService service
-    ) {
+		response.setDuration(service.getDuration());
 
-        ServiceResponse response =
-                new ServiceResponse();
+		response.setImageUrl(service.getImageUrl());
 
+		// =====================================
+		// GENDER
+		// =====================================
 
-        response.setId(
-                service.getId()
-        );
+		response.setGender(service.getGender());
 
-        response.setServiceName(
-                service.getServiceName()
-        );
+		response.setStatus(service.getStatus());
 
-        response.setDescription(
-                service.getDescription()
-        );
+		// =====================================
+		// CATEGORY
+		// =====================================
 
-        response.setPrice(
-                service.getPrice()
-        );
+		if (service.getCategory() != null) {
 
-        response.setDuration(
-                service.getDuration()
-        );
+			response.setCategoryId(service.getCategory().getId());
 
-        response.setImageUrl(
-                service.getImageUrl()
-        );
+			response.setCategoryName(service.getCategory().getCategoryName());
+		}
 
-        response.setStatus(
-                service.getStatus()
-        );
+		// =====================================
+		// SALON
+		// =====================================
 
+		if (service.getSalon() != null) {
 
-        // =====================================
-        // CATEGORY
-        // =====================================
+			response.setSalonId(service.getSalon().getId());
 
-        if (service.getCategory() != null) {
+			response.setSalonName(service.getSalon().getSalonName());
+		}
 
-            response.setCategoryId(
-                    service.getCategory().getId()
-            );
+		return response;
+	}
+	// =========================================
+	// GET SERVICES BY GENDER
+	// =========================================
 
-            response.setCategoryName(
-                    service.getCategory()
-                            .getCategoryName()
-            );
+	@Override
+	public List<ServiceResponse> getServicesByGender(Gender gender) {
 
-        }
-
-
-        // =====================================
-        // SALON
-        // =====================================
-
-        if (service.getSalon() != null) {
-
-            response.setSalonId(
-                    service.getSalon().getId()
-            );
-
-            response.setSalonName(
-                    service.getSalon().getSalonName()
-            );
-
-        }
-
-
-        return response;
-
-    }
+		return serviceRepository.
+				findByGender(gender).
+				stream().map(this::mapToResponse).
+				collect(Collectors.toList());
+	}
 
 }

@@ -2,6 +2,7 @@ package com.salonmanagementsystem.dto;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.enums.ServiceStatus;
 
 import jakarta.validation.constraints.Min;
@@ -28,9 +29,19 @@ public class ServiceRequest {
     @NotNull(message = "Duration is required")
     private Integer duration;
 
+    // =========================================
+    // SERVICE GENDER
+    // =========================================
+
+    @NotNull(message = "Gender is required")
+    private Gender gender;
+
+    // =========================================
+    // CATEGORY
+    // =========================================
+
     @NotNull(message = "Category is required")
     private Long categoryId;
-
 
     // =========================================
     // SALON
@@ -39,13 +50,11 @@ public class ServiceRequest {
     @NotNull(message = "Salon is required")
     private Long salonId;
 
-
     // =========================================
     // IMAGE
     // =========================================
 
     private MultipartFile image;
-
 
     // =========================================
     // STATUS

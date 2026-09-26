@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.salonmanagementsystem.dto.PaginationResponse;
+import com.salonmanagementsystem.dto.TimeSlotBatchRequest;
 import com.salonmanagementsystem.entity.TimeSlotClass;
 import com.salonmanagementsystem.enums.TimeSlotStatus;
 import com.salonmanagementsystem.service.TimeSlotClassService;
@@ -25,6 +26,18 @@ public class TimeSlotClassController {
 
     @Autowired
     private TimeSlotClassService timeSlotClassService;
+    
+ // =========================================
+ // ADD MULTIPLE TIME SLOTS
+ // =========================================
+
+ @PostMapping("/add-multiple")
+ public List<TimeSlotClass> addMultipleTimeSlots(
+         @RequestBody TimeSlotBatchRequest request) {
+
+     return timeSlotClassService
+             .addMultipleTimeSlots(request);
+ }
 
     // =========================================
     // ADD TIME SLOT

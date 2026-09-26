@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.salonmanagementsystem.dto.EmployeeServiceResponse;
 import com.salonmanagementsystem.dto.ServiceRequest;
 import com.salonmanagementsystem.dto.ServiceResponse;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.service.ServiceService;
 
 @RestController
@@ -32,7 +34,6 @@ public class ServiceController {
 
         this.serviceService =
                 serviceService;
-
     }
 
 
@@ -52,7 +53,6 @@ public class ServiceController {
         return ResponseEntity.ok(
                 serviceService.addService(request)
         );
-
     }
 
 
@@ -67,7 +67,24 @@ public class ServiceController {
         return ResponseEntity.ok(
                 serviceService.getAllServices()
         );
+    }
 
+
+    // =========================================
+    // GET SERVICES BY GENDER
+    // =========================================
+
+    @GetMapping("/gender/{gender}")
+    public ResponseEntity<List<ServiceResponse>>
+    getServicesByGender(
+            @PathVariable Gender gender
+    ) {
+
+        return ResponseEntity.ok(
+                serviceService.getServicesByGender(
+                        gender
+                )
+        );
     }
 
 
@@ -84,7 +101,6 @@ public class ServiceController {
         return ResponseEntity.ok(
                 serviceService.getServiceById(id)
         );
-
     }
 
 
@@ -102,7 +118,6 @@ public class ServiceController {
                 serviceService
                         .getServicesBySalon(salonId)
         );
-
     }
 
 
@@ -122,7 +137,25 @@ public class ServiceController {
                                 employeeId
                         )
         );
+    }
 
+
+    // =========================================
+    // GET EMPLOYEES BY SERVICE
+    // =========================================
+
+    @GetMapping("/{serviceId}/employees")
+    public ResponseEntity<List<EmployeeServiceResponse>>
+    getEmployeesByService(
+            @PathVariable Long serviceId
+    ) {
+
+        return ResponseEntity.ok(
+                serviceService
+                        .getEmployeesByService(
+                                serviceId
+                        )
+        );
     }
 
 
@@ -137,11 +170,8 @@ public class ServiceController {
     )
     public ResponseEntity<ServiceResponse>
     updateService(
-
             @PathVariable Long id,
-
             @ModelAttribute ServiceRequest request
-
     ) {
 
         return ResponseEntity.ok(
@@ -150,7 +180,6 @@ public class ServiceController {
                         request
                 )
         );
-
     }
 
 
@@ -169,7 +198,6 @@ public class ServiceController {
         return ResponseEntity.ok(
                 "Service deleted successfully."
         );
-
     }
 
 }

@@ -2,11 +2,12 @@ package com.salonmanagementsystem.service;
 
 import java.util.List;
 
+import com.salonmanagementsystem.dto.EmployeeServiceResponse;
 import com.salonmanagementsystem.dto.ServiceRequest;
 import com.salonmanagementsystem.dto.ServiceResponse;
+import com.salonmanagementsystem.enums.Gender;
 
 public interface ServiceService {
-
 
     // =========================================
     // ADD SERVICE
@@ -21,14 +22,16 @@ public interface ServiceService {
     // GET ALL SERVICES
     // =========================================
 
-    List<ServiceResponse> getAllServices();
+    List<ServiceResponse>
+    getAllServices();
 
 
     // =========================================
     // GET SERVICES BY SALON
     // =========================================
 
-    List<ServiceResponse> getServicesBySalon(
+    List<ServiceResponse>
+    getServicesBySalon(
             Long salonId
     );
 
@@ -37,8 +40,19 @@ public interface ServiceService {
     // GET SERVICES BY EMPLOYEE
     // =========================================
 
-    List<ServiceResponse> getServicesByEmployee(
+    List<ServiceResponse>
+    getServicesByEmployee(
             Long employeeId
+    );
+
+
+    // =========================================
+    // GET SERVICES BY GENDER
+    // =========================================
+
+    List<ServiceResponse>
+    getServicesByGender(
+            Gender gender
     );
 
 
@@ -67,6 +81,16 @@ public interface ServiceService {
 
     void deleteService(
             Long id
+    );
+
+
+    // =========================================
+    // GET EMPLOYEES BY SERVICE
+    // =========================================
+
+    List<EmployeeServiceResponse>
+    getEmployeesByService(
+            Long serviceId
     );
 
 }

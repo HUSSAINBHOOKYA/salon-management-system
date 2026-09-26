@@ -1,6 +1,8 @@
 package com.salonmanagementsystem.entity;
 
 import java.util.HashSet;
+
+
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,7 +22,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "employee_table")
@@ -32,7 +36,6 @@ public class EmployeeClass {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     // =========================================
     // EMPLOYEE DETAILS
@@ -52,7 +55,6 @@ public class EmployeeClass {
 
     private String description;
 
-
     // =========================================
     // EMPLOYEE RATING
     // =========================================
@@ -61,7 +63,6 @@ public class EmployeeClass {
 
     private Integer reviewCount;
 
-
     // =========================================
     // EMPLOYEE STATUS
     // =========================================
@@ -69,13 +70,11 @@ public class EmployeeClass {
     @Enumerated(EnumType.STRING)
     private EmployeeStatus status;
 
-
     // =========================================
     // EMPLOYEE IMAGE
     // =========================================
 
     private String imageUrl;
-
 
     // =========================================
     // EMPLOYEE → SALON
@@ -87,8 +86,9 @@ public class EmployeeClass {
             nullable = false
     )
     @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Salon salon;
-
 
     // =========================================
     // EMPLOYEE ↔ SERVICES
@@ -107,6 +107,9 @@ public class EmployeeClass {
             )
     )
     @JsonIgnore
-    private Set<SalonService> services = new HashSet<>();
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<SalonService> services =
+            new HashSet<>();
 
 }

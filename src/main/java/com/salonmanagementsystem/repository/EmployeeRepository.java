@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.salonmanagementsystem.entity.EmployeeClass;
 import com.salonmanagementsystem.enums.EmployeeStatus;
+import com.salonmanagementsystem.enums.Gender;
 
 public interface EmployeeRepository
         extends JpaRepository<EmployeeClass, Long> {
-
 
     // =========================================
     // SEARCH EMPLOYEE
@@ -58,6 +58,38 @@ public interface EmployeeRepository
     List<EmployeeClass>
     findBySalonIdAndStatus(
             Long salonId,
+            EmployeeStatus status
+    );
+
+
+    // =========================================
+    // SERVICE → EMPLOYEES
+    // =========================================
+
+    List<EmployeeClass>
+    findByServicesId(
+            Long serviceId
+    );
+
+
+    // =========================================
+    // TOP RATED EMPLOYEES BY SERVICE GENDER
+    // =========================================
+
+    List<EmployeeClass>
+    findDistinctByServices_GenderOrderByRatingDesc(
+            Gender gender
+    );
+
+
+    // =========================================
+    // TOP RATED ACTIVE EMPLOYEES BY
+    // SERVICE GENDER
+    // =========================================
+
+    List<EmployeeClass>
+    findDistinctByServices_GenderAndStatusOrderByRatingDesc(
+            Gender gender,
             EmployeeStatus status
     );
 

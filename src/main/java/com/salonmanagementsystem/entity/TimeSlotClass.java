@@ -2,8 +2,7 @@ package com.salonmanagementsystem.entity;
 
 import java.time.LocalDate;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.salonmanagementsystem.enums.TimeSlotStatus;
 
 import jakarta.persistence.Entity;
@@ -31,6 +30,10 @@ public class TimeSlotClass {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // =========================================
+    // TIME SLOT DETAILS
+    // =========================================
+
     private LocalDate slotDate;
 
     private String slotTime;
@@ -47,17 +50,8 @@ public class TimeSlotClass {
             name = "salon_id",
             nullable = false
     )
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Salon salon;
-
-    // =========================================
-    // TIME SLOT → SERVICE
-    // =========================================
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id")
-    @JsonIgnore
-    private SalonService salonService;
 
     // =========================================
     // TIME SLOT → EMPLOYEE
@@ -65,6 +59,6 @@ public class TimeSlotClass {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id")
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private EmployeeClass employee;
 }

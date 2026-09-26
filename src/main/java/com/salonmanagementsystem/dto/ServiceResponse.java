@@ -1,5 +1,6 @@
 package com.salonmanagementsystem.dto;
 
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.enums.ServiceStatus;
 
 import lombok.AllArgsConstructor;
@@ -22,6 +23,13 @@ public class ServiceResponse {
     private Integer duration;
 
     private String imageUrl;
+
+
+    // =========================================
+    // GENDER
+    // =========================================
+
+    private Gender gender;
 
 
     // =========================================

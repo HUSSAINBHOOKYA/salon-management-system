@@ -3,6 +3,8 @@ package com.salonmanagementsystem.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,64 +23,131 @@ import com.salonmanagementsystem.service.ProductOrderClassService;
 @RequestMapping("/api/product-orders")
 public class ProductOrderClassController {
 
-	@Autowired
-	private ProductOrderClassService productOrderClassService;
+    @Autowired
+    private ProductOrderClassService productOrderClassService;
 
-	// Add Order
-	@PostMapping("/add")
-	public ProductOrderClass addOrder(@RequestBody ProductOrderClass productOrderClass) {
 
-		return productOrderClassService.addProductOrder(productOrderClass);
-	}
+    // =========================================
+    // ADD ORDER
+    // =========================================
 
-	// Get All Orders
-	@GetMapping("/all")
-	public List<ProductOrderClass> getAllOrders() {
+    @PostMapping("/add")
+    public ProductOrderClass addOrder(
+            @RequestBody ProductOrderClass productOrderClass) {
 
-		return productOrderClassService.getAllOrders();
-	}
+        return productOrderClassService
+                .addProductOrder(productOrderClass);
+    }
 
-	// Get Order By Id
-	@GetMapping("/{id}")
-	public ProductOrderClass getOrderById(@PathVariable Long id) {
 
-		return productOrderClassService.getOrderById(id);
-	}
+    // =========================================
+    // GET ALL ORDERS
+    // =========================================
 
-	// Update Order
-	@PutMapping("/update/{id}")
-	public ProductOrderClass updateOrder(@PathVariable Long id, @RequestBody ProductOrderClass productOrderClass) {
+    @GetMapping("/all")
+    public List<ProductOrderClass> getAllOrders() {
 
-		return productOrderClassService.updateOrder(id, productOrderClass);
-	}
+        return productOrderClassService
+                .getAllOrders();
+    }
 
-	// Delete Order
-	@DeleteMapping("/delete/{id}")
-	public String deleteOrder(@PathVariable Long id) {
 
-		return productOrderClassService.deleteOrder(id);
-	}
+    // =========================================
+    // GET MY ORDERS
+    // =========================================
 
-	// Search Orders
-	@GetMapping("/search")
-	public List<ProductOrderClass> searchOrders(@RequestParam String name) {
+    @GetMapping("/my")
+    public List<ProductOrderClass> getMyOrders(
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-		return productOrderClassService.searchOrders(name);
+        return productOrderClassService
+                .getMyOrders(
+                        userDetails.getUsername()
+                );
+    }
 
-	}
 
-	// Pagination
-	@GetMapping("/pagination")
-	public PaginationResponse<ProductOrderClass> getOrdersPagination(
+    // =========================================
+    // GET ORDER BY ID
+    // =========================================
 
-			@RequestParam(defaultValue = "0") int page,
+    @GetMapping("/{id}")
+    public ProductOrderClass getOrderById(
+            @PathVariable Long id) {
 
-			@RequestParam(defaultValue = "10") int size
+        return productOrderClassService
+                .getOrderById(id);
+    }
 
-	) {
 
-		return productOrderClassService.getOrdersPagination(page, size);
+    // =========================================
+    // UPDATE ORDER
+    // =========================================
 
-	}
+    @PutMapping("/update/{id}")
+    public ProductOrderClass updateOrder(
+            @PathVariable Long id,
+            @RequestBody ProductOrderClass productOrderClass) {
+
+        return productOrderClassService
+                .updateOrder(
+                        id,
+                        productOrderClass
+                );
+    }
+
+
+    // =========================================
+    // DELETE ORDER
+    // =========================================
+
+    @DeleteMapping("/delete/{id}")
+    public String deleteOrder(
+            @PathVariable Long id) {
+
+        return productOrderClassService
+                .deleteOrder(id);
+    }
+
+
+    // =========================================
+    // SEARCH ORDERS
+    // =========================================
+
+    @GetMapping("/search")
+    public List<ProductOrderClass> searchOrders(
+            @RequestParam String name) {
+
+        return productOrderClassService
+                .searchOrders(name);
+    }
+
+
+    // =========================================
+    // PAGINATION
+    // =========================================
+
+    @GetMapping("/pagination")
+    public PaginationResponse<ProductOrderClass>
+    getOrdersPagination(
+
+            @RequestParam(
+                    defaultValue = "0"
+            )
+            int page,
+
+            @RequestParam(
+                    defaultValue = "10"
+            )
+            int size
+
+    ) {
+
+        return productOrderClassService
+                .getOrdersPagination(
+                        page,
+                        size
+                );
+    }
 
 }

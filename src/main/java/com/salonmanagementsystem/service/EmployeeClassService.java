@@ -14,13 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.salonmanagementsystem.constants.AppConstants;
+import com.salonmanagementsystem.dto.EmployeeServiceResponse;
+import com.salonmanagementsystem.dto.ServiceResponse;
 import com.salonmanagementsystem.entity.EmployeeClass;
 import com.salonmanagementsystem.entity.Salon;
 import com.salonmanagementsystem.entity.SalonService;
 import com.salonmanagementsystem.enums.EmployeeStatus;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.repository.EmployeeRepository;
 import com.salonmanagementsystem.repository.SalonRepository;
 import com.salonmanagementsystem.repository.ServiceRepository;
@@ -48,17 +52,20 @@ public class EmployeeClassService {
             MultipartFile image)
             throws IOException {
 
-        Salon salon = salonRepository
-                .findById(salonId)
-                .orElseThrow(() ->
-                        new RuntimeException("Salon Not Found"));
+        Salon salon =
+                salonRepository
+                        .findById(salonId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Salon Not Found"));
 
         // =====================================
         // CREATE UPLOAD FOLDER
         // =====================================
 
         File uploadFolder =
-                new File(AppConstants.EMPLOYEE_UPLOAD_DIR);
+                new File(
+                        AppConstants.EMPLOYEE_UPLOAD_DIR);
 
         if (!uploadFolder.exists()) {
             uploadFolder.mkdirs();
@@ -308,6 +315,7 @@ public class EmployeeClassService {
                     new File(imagePath);
 
             if (imageFile.exists()) {
+
                 imageFile.delete();
             }
         }
@@ -357,6 +365,20 @@ public class EmployeeClassService {
 
         return employeeRepository
                 .findByStatus(status);
+    }
+
+
+    // =========================================
+    // TOP RATED EMPLOYEES BY GENDER
+    // =========================================
+
+    public List<EmployeeClass> getTopRatedEmployeesByGender(
+            Gender gender) {
+
+        return employeeRepository
+                .findDistinctByServices_GenderAndStatusOrderByRatingDesc(
+                        gender,
+                        EmployeeStatus.ACTIVE);
     }
 
 
@@ -467,8 +489,12 @@ public class EmployeeClassService {
     // GET SERVICES ASSIGNED TO EMPLOYEE
     // =========================================
 
-    public List<SalonService> getEmployeeServices(
+    public List<ServiceResponse> getEmployeeServices(
             Long employeeId) {
+
+        // =====================================
+        // FIND EMPLOYEE
+        // =====================================
 
         EmployeeClass employee =
                 employeeRepository
@@ -477,8 +503,172 @@ public class EmployeeClassService {
                                 new RuntimeException(
                                         "Employee Not Found"));
 
+        // =====================================
+        // GET ASSIGNED SERVICES
+        // =====================================
+
         return employee.getServices()
                 .stream()
+                .map(service -> {
+
+                    ServiceResponse response =
+                            new ServiceResponse();
+
+                    // =================================
+                    // SERVICE DETAILS
+                    // =================================
+
+                    response.setId(
+                            service.getId());
+
+                    response.setServiceName(
+                            service.getServiceName());
+
+                    response.setDescription(
+                            service.getDescription());
+
+                    response.setPrice(
+                            service.getPrice());
+
+                    response.setDuration(
+                            service.getDuration());
+
+                    response.setImageUrl(
+                            service.getImageUrl());
+
+                    // =================================
+                    // GENDER
+                    // =================================
+
+                    response.setGender(
+                            service.getGender());
+
+                    response.setStatus(
+                            service.getStatus());
+
+                    // =================================
+                    // CATEGORY
+                    // =================================
+
+                    if (service.getCategory() != null) {
+
+                        response.setCategoryId(
+                                service.getCategory()
+                                        .getId());
+
+                        response.setCategoryName(
+                                service.getCategory()
+                                        .getCategoryName());
+                    }
+
+                    // =================================
+                    // SALON
+                    // =================================
+
+                    if (service.getSalon() != null) {
+
+                        response.setSalonId(
+                                service.getSalon()
+                                        .getId());
+
+                        response.setSalonName(
+                                service.getSalon()
+                                        .getSalonName());
+                    }
+
+                    return response;
+
+                })
                 .toList();
     }
+    
+ // =========================================
+ // ADMIN - GET ALL EMPLOYEES WITH SALON
+ // =========================================
+
+ @Transactional(readOnly = true)
+ public List<EmployeeServiceResponse> getAdminAllEmployees() {
+
+     return employeeRepository
+             .findAll()
+             .stream()
+             .map(employee -> {
+
+                 EmployeeServiceResponse response =
+                         new EmployeeServiceResponse();
+
+                 // =====================================
+                 // EMPLOYEE ID
+                 // =====================================
+
+                 response.setId(
+                         employee.getId());
+
+                 // =====================================
+                 // EMPLOYEE DETAILS
+                 // =====================================
+
+                 response.setEmployeeName(
+                         employee.getEmployeeName());
+
+                 response.setEmployeeEmail(
+                         employee.getEmployeeEmail());
+
+                 response.setSpecialization(
+                         employee.getSpecialization());
+
+                 response.setPhoneNumber(
+                         employee.getPhoneNumber());
+
+                 response.setExperience(
+                         employee.getExperience());
+
+                 response.setSalary(
+                         employee.getSalary());
+
+                 response.setDescription(
+                         employee.getDescription());
+
+                 // =====================================
+                 // RATING
+                 // =====================================
+
+                 response.setRating(
+                         employee.getRating());
+
+                 response.setReviewCount(
+                         employee.getReviewCount());
+
+                 // =====================================
+                 // IMAGE
+                 // =====================================
+
+                 response.setImageUrl(
+                         employee.getImageUrl());
+
+                 // =====================================
+                 // STATUS
+                 // =====================================
+
+                 response.setStatus(
+                         employee.getStatus());
+
+                 // =====================================
+                 // SALON
+                 // =====================================
+
+                 if (employee.getSalon() != null) {
+
+                     response.setSalonId(
+                             employee.getSalon().getId());
+
+                     response.setSalonName(
+                             employee.getSalon().getSalonName());
+                 }
+
+                 return response;
+             })
+             .toList();
+ }
+
 }

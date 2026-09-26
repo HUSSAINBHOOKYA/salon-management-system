@@ -30,11 +30,6 @@ public class Salon {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    // =========================================
-    // SALON DETAILS
-    // =========================================
-
     @Column(nullable = false)
     private String salonName;
 
@@ -43,6 +38,9 @@ public class Salon {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(name = "partner_email")
+    private String partnerEmail;
 
     @Column(nullable = false)
     private String phoneNumber;
@@ -65,36 +63,15 @@ public class Salon {
     @Column(nullable = false)
     private String closingTime;
 
-
-    // =========================================
-    // SALON DESCRIPTION
-    // =========================================
-
     @Column(length = 1000)
     private String description;
-
-
-    // =========================================
-    // SALON RATING
-    // =========================================
 
     private Double rating;
 
     private Integer reviewCount;
 
-
-    // =========================================
-    // SALON LOGO
-    // =========================================
-
     private String logoUrl;
-
-
-    // =========================================
-    // SALON STATUS
-    // =========================================
 
     @Enumerated(EnumType.STRING)
     private SalonStatus status;
-
 }

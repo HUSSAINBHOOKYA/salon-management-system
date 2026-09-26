@@ -7,11 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.salonmanagementsystem.dto.PaginationResponse;
+import com.salonmanagementsystem.entity.BillClass;
 import com.salonmanagementsystem.entity.ProductClass;
 import com.salonmanagementsystem.entity.ProductOrderClass;
+import com.salonmanagementsystem.enums.PaymentStatus;
 import com.salonmanagementsystem.enums.ProductStatus;
+import com.salonmanagementsystem.repository.BillRepository;
 import com.salonmanagementsystem.repository.ProductOrderRepository;
 import com.salonmanagementsystem.repository.ProductRepository;
 
@@ -24,195 +28,432 @@ public class ProductOrderClassService {
     @Autowired
     private ProductRepository productRepository;
 
-    // Add Product Order
-    public ProductOrderClass addProductOrder(ProductOrderClass productOrderClass) {
+    @Autowired
+    private BillClassService billClassService;
+
+    @Autowired
+    private BillRepository billRepository;
+
+    // =========================================
+    // ADD PRODUCT ORDER
+    // CUSTOMER ORDER
+    // =========================================
+
+    @Transactional
+    public ProductOrderClass addProductOrder(
+            ProductOrderClass productOrderClass) {
 
         ProductClass product = productRepository
                 .findById(productOrderClass.getProduct().getId())
-                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+                .orElseThrow(
+                        () -> new RuntimeException("Product Not Found")
+                );
 
-        // Check Stock
-        if (product.getStockQuantity() < productOrderClass.getQuantity()) {
-            throw new RuntimeException("Insufficient Stock");
+        // =========================================
+        // CHECK STOCK
+        // =========================================
+
+        if (product.getStockQuantity()
+                < productOrderClass.getQuantity()) {
+
+            throw new RuntimeException(
+                    "Insufficient Stock"
+            );
         }
 
-        // Calculate Total Price
+        // =========================================
+        // CALCULATE TOTAL PRICE
+        // =========================================
+
         Double totalPrice =
-                product.getPrice() * productOrderClass.getQuantity();
+                product.getPrice()
+                        * productOrderClass.getQuantity();
 
         productOrderClass.setTotalPrice(totalPrice);
 
-        // Reduce Stock
-        product.setStockQuantity(
-                product.getStockQuantity() - productOrderClass.getQuantity());
+        // =========================================
+        // REDUCE STOCK
+        // =========================================
 
-        // Update Product Status
+        product.setStockQuantity(
+                product.getStockQuantity()
+                        - productOrderClass.getQuantity()
+        );
+
+        // =========================================
+        // UPDATE PRODUCT STATUS
+        // =========================================
+
         if (product.getStockQuantity() == 0) {
-            product.setStatus(ProductStatus.OUT_OF_STOCK);
+
+            product.setStatus(
+                    ProductStatus.OUT_OF_STOCK
+            );
+
         } else {
-            product.setStatus(ProductStatus.AVAILABLE);
+
+            product.setStatus(
+                    ProductStatus.AVAILABLE
+            );
         }
+
+        // =========================================
+        // SAVE PRODUCT
+        // =========================================
 
         productRepository.save(product);
 
+        // =========================================
+        // SET PRODUCT
+        // =========================================
+
         productOrderClass.setProduct(product);
 
-        return productOrderRepository.save(productOrderClass);
+        // =========================================
+        // SAVE PRODUCT ORDER
+        // =========================================
+
+        ProductOrderClass savedOrder =
+                productOrderRepository.save(
+                        productOrderClass
+                );
+
+        // =========================================
+        // AUTOMATIC BILL GENERATION
+        // =========================================
+
+        BillClass bill = new BillClass();
+
+        bill.setProductOrder(savedOrder);
+
+        bill.setPaymentStatus(
+                savedOrder.getPaymentStatus() != null
+                        ? savedOrder.getPaymentStatus()
+                        : PaymentStatus.PENDING
+        );
+
+        bill.setPaymentMethod("CASH");
+
+        billClassService.addBill(bill);
+
+        // =========================================
+        // RETURN SAVED ORDER
+        // =========================================
+
+        return savedOrder;
     }
 
-    // Get All Orders
+    // =========================================
+    // GET ALL ORDERS
+    // =========================================
+
     public List<ProductOrderClass> getAllOrders() {
+
         return productOrderRepository.findAll();
     }
 
-    // Get Order By Id
-    public ProductOrderClass getOrderById(Long id) {
-        return productOrderRepository.findById(id).orElse(null);
+    // =========================================
+    // GET MY ORDERS
+    // =========================================
+
+    public List<ProductOrderClass> getMyOrders(
+            String customerEmail) {
+
+        return productOrderRepository
+                .findByCustomerEmailOrderByIdDesc(
+                        customerEmail
+                );
     }
 
-//    // Update Order
-//    public ProductOrderClass updateOrder(Long id,
-//            ProductOrderClass productOrderClass) {
-//
-//        ProductOrderClass existingOrder =
-//                productOrderRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Order Not Found"));
-//
-//        ProductClass product = productRepository
-//                .findById(productOrderClass.getProduct().getId())
-//                .orElseThrow(() -> new RuntimeException("Product Not Found"));
-//
-//        existingOrder.setCustomerName(productOrderClass.getCustomerName());
-//        existingOrder.setCustomerPhone(productOrderClass.getCustomerPhone());
-//        existingOrder.setCustomerEmail(productOrderClass.getCustomerEmail());
-//        existingOrder.setQuantity(productOrderClass.getQuantity());
-//        existingOrder.setPaymentStatus(productOrderClass.getPaymentStatus());
-//        existingOrder.setOrderDate(productOrderClass.getOrderDate());
-//        existingOrder.setProduct(product);
-//
-//        Double totalPrice =
-//                product.getPrice() * productOrderClass.getQuantity();
-//
-//        existingOrder.setTotalPrice(totalPrice);
-//
-//        return productOrderRepository.save(existingOrder);
-//    }
-    
- // Update Order
-    public ProductOrderClass updateOrder(Long id,
+    // =========================================
+    // GET ORDER BY ID
+    // =========================================
+
+    public ProductOrderClass getOrderById(Long id) {
+
+        return productOrderRepository
+                .findById(id)
+                .orElse(null);
+    }
+
+    // =========================================
+    // UPDATE ORDER
+    // =========================================
+
+    @Transactional
+    public ProductOrderClass updateOrder(
+            Long id,
             ProductOrderClass productOrderClass) {
 
-        ProductOrderClass existingOrder = productOrderRepository
-                .findById(id)
-                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+        ProductOrderClass existingOrder =
+                productOrderRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Order Not Found"
+                                )
+                        );
 
-        ProductClass oldProduct = existingOrder.getProduct();
+        ProductClass oldProduct =
+                existingOrder.getProduct();
 
-        ProductClass newProduct = productRepository
-                .findById(productOrderClass.getProduct().getId())
-                .orElseThrow(() -> new RuntimeException("Product Not Found"));
+        ProductClass newProduct =
+                productRepository
+                        .findById(
+                                productOrderClass
+                                        .getProduct()
+                                        .getId()
+                        )
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Product Not Found"
+                                )
+                        );
 
-        // Restore old stock
+        // =========================================
+        // RESTORE OLD STOCK
+        // =========================================
+
         oldProduct.setStockQuantity(
-                oldProduct.getStockQuantity() + existingOrder.getQuantity());
+                oldProduct.getStockQuantity()
+                        + existingOrder.getQuantity()
+        );
 
         if (oldProduct.getStockQuantity() > 0) {
-            oldProduct.setStatus(ProductStatus.AVAILABLE);
+
+            oldProduct.setStatus(
+                    ProductStatus.AVAILABLE
+            );
+
         } else {
-            oldProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+
+            oldProduct.setStatus(
+                    ProductStatus.OUT_OF_STOCK
+            );
         }
 
         productRepository.save(oldProduct);
 
-        // Check new stock
-        if (newProduct.getStockQuantity() < productOrderClass.getQuantity()) {
-            throw new RuntimeException("Insufficient Stock");
+        // =========================================
+        // CHECK NEW STOCK
+        // =========================================
+
+        if (newProduct.getStockQuantity()
+                < productOrderClass.getQuantity()) {
+
+            throw new RuntimeException(
+                    "Insufficient Stock"
+            );
         }
 
-        // Reduce new stock
+        // =========================================
+        // REDUCE NEW STOCK
+        // =========================================
+
         newProduct.setStockQuantity(
-                newProduct.getStockQuantity() - productOrderClass.getQuantity());
+                newProduct.getStockQuantity()
+                        - productOrderClass.getQuantity()
+        );
 
         if (newProduct.getStockQuantity() == 0) {
-            newProduct.setStatus(ProductStatus.OUT_OF_STOCK);
+
+            newProduct.setStatus(
+                    ProductStatus.OUT_OF_STOCK
+            );
+
         } else {
-            newProduct.setStatus(ProductStatus.AVAILABLE);
+
+            newProduct.setStatus(
+                    ProductStatus.AVAILABLE
+            );
         }
 
         productRepository.save(newProduct);
 
-        // Update order details
-        existingOrder.setCustomerName(productOrderClass.getCustomerName());
-        existingOrder.setCustomerPhone(productOrderClass.getCustomerPhone());
-        existingOrder.setCustomerEmail(productOrderClass.getCustomerEmail());
-        existingOrder.setQuantity(productOrderClass.getQuantity());
-        existingOrder.setPaymentStatus(productOrderClass.getPaymentStatus());
-        existingOrder.setOrderDate(productOrderClass.getOrderDate());
-        existingOrder.setProduct(newProduct);
+        // =========================================
+        // UPDATE ORDER DETAILS
+        // =========================================
+
+        existingOrder.setCustomerName(
+                productOrderClass.getCustomerName()
+        );
+
+        existingOrder.setCustomerPhone(
+                productOrderClass.getCustomerPhone()
+        );
+
+        existingOrder.setCustomerEmail(
+                productOrderClass.getCustomerEmail()
+        );
+
+        existingOrder.setQuantity(
+                productOrderClass.getQuantity()
+        );
+
+        // =========================================
+        // UPDATE PAYMENT STATUS
+        // =========================================
+
+        PaymentStatus updatedPaymentStatus =
+                productOrderClass.getPaymentStatus();
+
+        if (updatedPaymentStatus == null) {
+
+            updatedPaymentStatus =
+                    existingOrder.getPaymentStatus() != null
+                            ? existingOrder.getPaymentStatus()
+                            : PaymentStatus.PENDING;
+        }
+
+        existingOrder.setPaymentStatus(
+                updatedPaymentStatus
+        );
+
+        existingOrder.setOrderDate(
+                productOrderClass.getOrderDate()
+        );
+
+        existingOrder.setProduct(
+                newProduct
+        );
+
+        // =========================================
+        // RECALCULATE TOTAL PRICE
+        // =========================================
 
         existingOrder.setTotalPrice(
-                newProduct.getPrice() * productOrderClass.getQuantity());
+                newProduct.getPrice()
+                        * productOrderClass.getQuantity()
+        );
 
-        return productOrderRepository.save(existingOrder);
+        // =========================================
+        // SAVE UPDATED ORDER
+        // =========================================
+
+        ProductOrderClass savedOrder =
+                productOrderRepository.save(
+                        existingOrder
+                );
+
+        // =========================================
+        // UPDATE RELATED BILL
+        // PRODUCT ORDER → BILL
+        // =========================================
+
+        BillClass relatedBill =
+                billRepository
+                        .findByProductOrderId(savedOrder.getId())
+                        .orElse(null);
+
+        if (relatedBill != null) {
+
+            relatedBill.setPaymentStatus(
+                    updatedPaymentStatus
+            );
+
+            billRepository.save(relatedBill);
+        }
+
+        // =========================================
+        // RETURN UPDATED ORDER
+        // =========================================
+
+        return savedOrder;
     }
 
-    // Delete Order
+    // =========================================
+    // DELETE ORDER
+    // =========================================
+
+    @Transactional
     public String deleteOrder(Long id) {
 
-        ProductOrderClass order = productOrderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order Not Found"));
+        ProductOrderClass order =
+                productOrderRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> new RuntimeException(
+                                        "Order Not Found"
+                                )
+                        );
 
-        ProductClass product = order.getProduct();
+        ProductClass product =
+                order.getProduct();
 
-        // Restore Stock
+        // =========================================
+        // RESTORE STOCK
+        // =========================================
+
         product.setStockQuantity(
-                product.getStockQuantity() + order.getQuantity());
+                product.getStockQuantity()
+                        + order.getQuantity()
+        );
+
+        // =========================================
+        // UPDATE PRODUCT STATUS
+        // =========================================
 
         if (product.getStockQuantity() > 0) {
-            product.setStatus(ProductStatus.AVAILABLE);
+
+            product.setStatus(
+                    ProductStatus.AVAILABLE
+            );
         }
 
         productRepository.save(product);
+
+        // =========================================
+        // DELETE ORDER
+        // =========================================
 
         productOrderRepository.delete(order);
 
         return "Order Deleted Successfully";
     }
- // Search Orders
-    public List<ProductOrderClass> searchOrders(String name) {
 
-        Pageable pageable = PageRequest.of(0, Integer.MAX_VALUE);
+    // =========================================
+    // SEARCH ORDERS
+    // =========================================
+
+    public List<ProductOrderClass> searchOrders(
+            String name) {
+
+        Pageable pageable =
+                PageRequest.of(
+                        0,
+                        Integer.MAX_VALUE
+                );
 
         return productOrderRepository
-                .findByCustomerNameContainingIgnoreCase(name, pageable)
+                .findByCustomerNameContainingIgnoreCase(
+                        name,
+                        pageable
+                )
                 .getContent();
-
     }
 
-    // Pagination
-    public PaginationResponse<ProductOrderClass> getOrdersPagination(
-            int page,
-            int size
-    ) {
+    // =========================================
+    // PAGINATION
+    // =========================================
 
-        Pageable pageable = PageRequest.of(page, size);
+    public PaginationResponse<ProductOrderClass>
+    getOrdersPagination(
+            int page,
+            int size) {
+
+        Pageable pageable =
+                PageRequest.of(page, size);
 
         Page<ProductOrderClass> orderPage =
-                productOrderRepository.findAll(pageable);
+                productOrderRepository
+                        .findAll(pageable);
 
         return new PaginationResponse<>(
-
                 orderPage.getContent(),
-
                 orderPage.getNumber(),
-
                 orderPage.getTotalPages(),
-
                 orderPage.getTotalElements(),
-
                 orderPage.getSize()
-
         );
-
     }
 }

@@ -1,5 +1,6 @@
 package com.salonmanagementsystem.dto;
 
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.enums.Role;
 
 import lombok.AllArgsConstructor;
@@ -13,8 +14,15 @@ public class UserResponse {
 
     private Long id;
 
+    private String fullName;
+
     private String email;
 
-    private Role role;
+    private String phoneNumber;
 
+    private Gender gender;
+
+    private Integer age;
+
+    private Role role;
 }

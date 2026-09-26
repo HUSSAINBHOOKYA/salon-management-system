@@ -1,5 +1,8 @@
 package com.salonmanagementsystem.repository;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,16 +15,51 @@ import com.salonmanagementsystem.enums.PaymentStatus;
 public interface BillRepository
         extends JpaRepository<BillClass, Long> {
 
-    // Search Customer Name
+    // =========================================================
+    // SEARCH BY CUSTOMER NAME
+    // =========================================================
+
     Page<BillClass> findByCustomerNameContainingIgnoreCase(
             String customerName,
             Pageable pageable
     );
 
-    // Payment Status
+    // =========================================================
+    // PAYMENT STATUS
+    // =========================================================
+
     Page<BillClass> findByPaymentStatus(
             PaymentStatus paymentStatus,
             Pageable pageable
     );
 
+    // =========================================================
+    // CUSTOMER - MY BILLS
+    // =========================================================
+
+    List<BillClass> findByCustomerEmailIgnoreCase(
+            String customerEmail
+    );
+
+    // =========================================================
+    // FIND BILL BY PRODUCT ORDER
+    // PRODUCT ORDER → BILL
+    // =========================================================
+
+    Optional<BillClass> findByProductOrderId(
+            Long productOrderId
+    );
+
+    // =========================================================
+    // FIND BILL BY APPOINTMENT
+    // APPOINTMENT → BILL
+    // =========================================================
+
+    Optional<BillClass> findByAppointmentId(
+            Long appointmentId
+    );
+    
+    List<BillClass> findByAppointmentIdIn(List<Long> appointmentIds);
+
+    List<BillClass> findByProductOrderIdIn(List<Long> productOrderIds);
 }

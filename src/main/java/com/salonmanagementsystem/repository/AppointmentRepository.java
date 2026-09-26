@@ -19,52 +19,73 @@ public interface AppointmentRepository
     // ============================
     // Search Customer
     // ============================
+
     Page<AppointmentClass> findByCustomerNameContainingIgnoreCase(
             String customerName,
             Pageable pageable
     );
 
+
+    // ============================
+    // Customer's Appointments
+    // ============================
+
+    List<AppointmentClass> findByCustomerEmail(
+            String customerEmail
+    );
+
+
     // ============================
     // Date Filter
     // ============================
+
     List<AppointmentClass> findByAppointmentDate(
             LocalDate appointmentDate
     );
 
+
     // ============================
     // Employee Filter
     // ============================
+
     List<AppointmentClass> findByEmployeeId(
             Long employeeId
     );
 
+
     // ============================
     // Booking Status Filter
     // ============================
+
     Page<AppointmentClass> findByBookingStatus(
             BookingStatus bookingStatus,
             Pageable pageable
     );
 
+
     // ============================
     // Payment Status Filter
     // ============================
+
     Page<AppointmentClass> findByPaymentStatus(
             PaymentStatus paymentStatus,
             Pageable pageable
     );
 
+
     // ============================
     // Dashboard Counts
     // ============================
+
     long countByBookingStatus(
             BookingStatus bookingStatus
     );
+
 
     long countByAppointmentDate(
             LocalDate appointmentDate
     );
     
-    
+    List<AppointmentClass> findBySalonId(Long salonId);
 
 }

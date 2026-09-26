@@ -1,10 +1,12 @@
 package com.salonmanagementsystem.controller;
 
 import java.io.IOException;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,352 +19,253 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.salonmanagementsystem.dto.EmployeeServiceRequest;
+import com.salonmanagementsystem.dto.EmployeeServiceResponse;
+import com.salonmanagementsystem.dto.ServiceResponse;
 import com.salonmanagementsystem.entity.EmployeeClass;
-import com.salonmanagementsystem.entity.SalonService;
 import com.salonmanagementsystem.enums.EmployeeStatus;
+import com.salonmanagementsystem.enums.Gender;
 import com.salonmanagementsystem.service.EmployeeClassService;
 
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeClassController {
 
-    @Autowired
-    private EmployeeClassService employeeClassService;
+	@Autowired
+	private EmployeeClassService employeeClassService;
 
+	// =========================================
+	// ADD EMPLOYEE
+	// =========================================
 
-    // =========================================
-    // ADD EMPLOYEE
-    // =========================================
+	@PostMapping(value = "/add", consumes = "multipart/form-data")
+	public EmployeeClass addEmployee(
 
-    @PostMapping(
-            value = "/add",
-            consumes = "multipart/form-data"
-    )
-    public EmployeeClass addEmployee(
+			@RequestParam String employeeName,
 
-            @RequestParam String employeeName,
+			@RequestParam String employeeEmail,
 
-            @RequestParam String employeeEmail,
+			@RequestParam String specialization,
 
-            @RequestParam String specialization,
+			@RequestParam String phoneNumber,
 
-            @RequestParam String phoneNumber,
+			@RequestParam Integer experience,
 
-            @RequestParam Integer experience,
+			@RequestParam Double salary,
 
-            @RequestParam Double salary,
+			@RequestParam(required = false) String description,
 
-            @RequestParam(required = false)
-            String description,
+			@RequestParam(required = false) Double rating,
 
-            @RequestParam(required = false)
-            Double rating,
+			@RequestParam(required = false) Integer reviewCount,
 
-            @RequestParam(required = false)
-            Integer reviewCount,
+			@RequestParam EmployeeStatus status,
 
-            @RequestParam EmployeeStatus status,
+			@RequestParam Long salonId,
 
-            @RequestParam Long salonId,
+			@RequestParam(required = false) MultipartFile image
 
-            @RequestParam(required = false)
-            MultipartFile image
+	) throws IOException {
 
-    ) throws IOException {
+		EmployeeClass employee = new EmployeeClass();
 
+		employee.setEmployeeName(employeeName);
+		employee.setEmployeeEmail(employeeEmail);
+		employee.setSpecialization(specialization);
+		employee.setPhoneNumber(phoneNumber);
+		employee.setExperience(experience);
+		employee.setSalary(salary);
+		employee.setDescription(description);
+		employee.setRating(rating);
+		employee.setReviewCount(reviewCount);
+		employee.setStatus(status);
 
-        EmployeeClass employee =
-                new EmployeeClass();
+		return employeeClassService.addEmployee(employee, salonId, image);
+	}
 
+	// =========================================
+	// GET ALL EMPLOYEES
+	// =========================================
 
-        employee.setEmployeeName(
-                employeeName
-        );
+	@GetMapping("/all")
+	public List<EmployeeClass> getAllEmployees() {
 
-        employee.setEmployeeEmail(
-                employeeEmail
-        );
+		return employeeClassService.getAllEmployees();
+	}
 
-        employee.setSpecialization(
-                specialization
-        );
+	// =========================================
+	// GET EMPLOYEE BY ID
+	// =========================================
 
-        employee.setPhoneNumber(
-                phoneNumber
-        );
+	@GetMapping("/{id}")
+	public EmployeeClass getEmployeeById(@PathVariable Long id) {
 
-        employee.setExperience(
-                experience
-        );
+		return employeeClassService.getEmployeeById(id);
+	}
 
-        employee.setSalary(
-                salary
-        );
+	// =========================================
+	// GET EMPLOYEES BY SALON
+	// =========================================
 
-        employee.setDescription(
-                description
-        );
+	@GetMapping("/salon/{salonId}")
+	public List<EmployeeClass> getEmployeesBySalon(@PathVariable Long salonId) {
 
-        employee.setRating(
-                rating
-        );
+		return employeeClassService.getEmployeesBySalon(salonId);
+	}
 
-        employee.setReviewCount(
-                reviewCount
-        );
+	// =========================================
+	// GET TOP RATED EMPLOYEES BY GENDER
+	// =========================================
 
-        employee.setStatus(
-                status
-        );
+	@GetMapping("/top-rated/{gender}")
+	public ResponseEntity<List<EmployeeClass>> getTopRatedEmployeesByGender(
+			@PathVariable Gender gender) {
 
+		return ResponseEntity.ok(
+				employeeClassService.getTopRatedEmployeesByGender(gender)
+		);
+	}
 
-        return employeeClassService.addEmployee(
-                employee,
-                salonId,
-                image
-        );
+	// =========================================
+	// UPDATE EMPLOYEE
+	// =========================================
 
-    }
+	@PutMapping(value = "/update/{id}", consumes = "multipart/form-data")
+	public EmployeeClass updateEmployee(
 
+			@PathVariable Long id,
 
-    // =========================================
-    // GET ALL EMPLOYEES
-    // =========================================
+			@RequestParam String employeeName,
 
-    @GetMapping("/all")
-    public List<EmployeeClass> getAllEmployees() {
+			@RequestParam String employeeEmail,
 
-        return employeeClassService
-                .getAllEmployees();
+			@RequestParam String specialization,
 
-    }
+			@RequestParam String phoneNumber,
 
+			@RequestParam Integer experience,
 
-    // =========================================
-    // GET EMPLOYEE BY ID
-    // =========================================
+			@RequestParam Double salary,
 
-    @GetMapping("/{id}")
-    public EmployeeClass getEmployeeById(
-            @PathVariable Long id) {
+			@RequestParam(required = false) String description,
 
-        return employeeClassService
-                .getEmployeeById(id);
+			@RequestParam(required = false) Double rating,
 
-    }
+			@RequestParam(required = false) Integer reviewCount,
 
+			@RequestParam EmployeeStatus status,
 
-    // =========================================
-    // GET EMPLOYEES BY SALON
-    // =========================================
+			@RequestParam Long salonId,
 
-    @GetMapping("/salon/{salonId}")
-    public List<EmployeeClass> getEmployeesBySalon(
-            @PathVariable Long salonId) {
+			@RequestParam(required = false) MultipartFile image
 
-        return employeeClassService
-                .getEmployeesBySalon(salonId);
+	) throws IOException {
 
-    }
+		EmployeeClass employee = new EmployeeClass();
 
+		employee.setEmployeeName(employeeName);
+		employee.setEmployeeEmail(employeeEmail);
+		employee.setSpecialization(specialization);
+		employee.setPhoneNumber(phoneNumber);
+		employee.setExperience(experience);
+		employee.setSalary(salary);
+		employee.setDescription(description);
+		employee.setRating(rating);
+		employee.setReviewCount(reviewCount);
+		employee.setStatus(status);
 
-    // =========================================
-    // UPDATE EMPLOYEE
-    // =========================================
+		return employeeClassService.updateEmployee(
+				id,
+				employee,
+				salonId,
+				image
+		);
+	}
 
-    @PutMapping(
-            value = "/update/{id}",
-            consumes = "multipart/form-data"
-    )
-    public EmployeeClass updateEmployee(
+	// =========================================
+	// DELETE EMPLOYEE
+	// =========================================
 
-            @PathVariable Long id,
+	@DeleteMapping("/delete/{id}")
+	public String deleteEmployee(@PathVariable Long id) {
 
-            @RequestParam String employeeName,
+		return employeeClassService.deleteEmployee(id);
+	}
 
-            @RequestParam String employeeEmail,
+	// =========================================
+	// SEARCH EMPLOYEE
+	// =========================================
 
-            @RequestParam String specialization,
+	@GetMapping("/search")
+	public List<EmployeeClass> searchEmployee(@RequestParam String name) {
 
-            @RequestParam String phoneNumber,
+		return employeeClassService.searchEmployee(name);
+	}
 
-            @RequestParam Integer experience,
+	// =========================================
+	// PAGINATION
+	// =========================================
 
-            @RequestParam Double salary,
+	@GetMapping("/pagination")
+	public Page<EmployeeClass> getEmployeesPagination(
 
-            @RequestParam(required = false)
-            String description,
+			@RequestParam int page,
 
-            @RequestParam(required = false)
-            Double rating,
+			@RequestParam int size
 
-            @RequestParam(required = false)
-            Integer reviewCount,
+	) {
 
-            @RequestParam EmployeeStatus status,
+		return employeeClassService.getEmployeesPagination(page, size);
+	}
 
-            @RequestParam Long salonId,
+	// =========================================
+	// FILTER BY STATUS
+	// =========================================
 
-            @RequestParam(required = false)
-            MultipartFile image
+	@GetMapping("/status/{status}")
+	public List<EmployeeClass> getEmployeesByStatus(
+			@PathVariable EmployeeStatus status) {
 
-    ) throws IOException {
+		return employeeClassService.getEmployeesByStatus(status);
+	}
 
+	// =========================================
+	// ASSIGN SERVICES TO EMPLOYEE
+	// =========================================
 
-        EmployeeClass employee =
-                new EmployeeClass();
+	@PutMapping("/{employeeId}/services")
+	public EmployeeClass assignServices(
 
+			@PathVariable Long employeeId,
 
-        employee.setEmployeeName(
-                employeeName
-        );
+			@RequestBody EmployeeServiceRequest request
 
-        employee.setEmployeeEmail(
-                employeeEmail
-        );
+	) {
 
-        employee.setSpecialization(
-                specialization
-        );
+		return employeeClassService.assignServices(
+				employeeId,
+				request.getServiceIds()
+		);
+	}
 
-        employee.setPhoneNumber(
-                phoneNumber
-        );
+	// =========================================
+	// GET SERVICES ASSIGNED TO EMPLOYEE
+	// =========================================
 
-        employee.setExperience(
-                experience
-        );
+	@GetMapping("/{employeeId}/services")
+	public List<ServiceResponse> getEmployeeServices(
 
-        employee.setSalary(
-                salary
-        );
+			@PathVariable Long employeeId) {
 
-        employee.setDescription(
-                description
-        );
+		return employeeClassService.getEmployeeServices(employeeId);
+	}
+	// =========================================
+	// ADMIN - GET ALL EMPLOYEES WITH SALON
+	// =========================================
 
-        employee.setRating(
-                rating
-        );
+	@GetMapping("/admin/all")
+	public List<EmployeeServiceResponse> getAdminAllEmployees() {
 
-        employee.setReviewCount(
-                reviewCount
-        );
-
-        employee.setStatus(
-                status
-        );
-
-
-        return employeeClassService.updateEmployee(
-                id,
-                employee,
-                salonId,
-                image
-        );
-
-    }
-
-
-    // =========================================
-    // DELETE EMPLOYEE
-    // =========================================
-
-    @DeleteMapping("/delete/{id}")
-    public String deleteEmployee(
-            @PathVariable Long id) {
-
-        return employeeClassService
-                .deleteEmployee(id);
-
-    }
-
-
-    // =========================================
-    // SEARCH EMPLOYEE
-    // =========================================
-
-    @GetMapping("/search")
-    public List<EmployeeClass> searchEmployee(
-            @RequestParam String name) {
-
-        return employeeClassService
-                .searchEmployee(name);
-
-    }
-
-
-    // =========================================
-    // PAGINATION
-    // =========================================
-
-    @GetMapping("/pagination")
-    public Page<EmployeeClass> getEmployeesPagination(
-
-            @RequestParam int page,
-
-            @RequestParam int size
-
-    ) {
-
-        return employeeClassService
-                .getEmployeesPagination(
-                        page,
-                        size
-                );
-
-    }
-
-
-    // =========================================
-    // FILTER BY STATUS
-    // =========================================
-
-    @GetMapping("/status/{status}")
-    public List<EmployeeClass> getEmployeesByStatus(
-
-            @PathVariable EmployeeStatus status
-
-    ) {
-
-        return employeeClassService
-                .getEmployeesByStatus(status);
-
-    }
-
-
-    // =========================================
-    // ASSIGN SERVICES TO EMPLOYEE
-    // =========================================
-
-
-
-   @PutMapping("/{employeeId}/services")
-    public EmployeeClass assignServices(
-
-         @PathVariable Long employeeId,
-
-         @RequestBody EmployeeServiceRequest request
-
-   ) {
-
-        return employeeClassService
-             .assignServices(
-                     employeeId,
-                     request.getServiceIds()
-             );
- }
-   
-// =========================================
-// GET SERVICES ASSIGNED TO EMPLOYEE
-// =========================================
-
-@GetMapping("/{employeeId}/services")
-public List<SalonService> getEmployeeServices(
-        @PathVariable Long employeeId) {
-
-    return employeeClassService
-            .getEmployeeServices(employeeId);
-}
+	    return employeeClassService.getAdminAllEmployees();
+	}
 
 }

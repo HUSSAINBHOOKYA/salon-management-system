@@ -23,6 +23,7 @@ public class SecurityConfig {
         this.jwtFilter = jwtFilter;
     }
 
+
     // =========================================
     // PASSWORD ENCODER
     // =========================================
@@ -32,6 +33,7 @@ public class SecurityConfig {
 
         return new BCryptPasswordEncoder();
     }
+
 
     // =========================================
     // SECURITY FILTER CHAIN
@@ -49,21 +51,24 @@ public class SecurityConfig {
 
             .csrf(csrf -> csrf.disable())
 
+
             // =====================================
             // CORS
             // =====================================
 
             .cors(cors -> {})
 
+
             // =====================================
             // SESSION
             // =====================================
 
             .sessionManagement(session ->
-                    session.sessionCreationPolicy(
-                            SessionCreationPolicy.STATELESS
-                    )
+                session.sessionCreationPolicy(
+                    SessionCreationPolicy.STATELESS
+                )
             )
+
 
             // =====================================
             // AUTHORIZATION
@@ -71,159 +76,329 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
+
                 // =================================
-                // PUBLIC APIs
+                // PUBLIC AUTH APIs
                 // =================================
 
                 .requestMatchers(
-                        "/api/users/register",
-                        "/api/users/login",
-                        "/uploads/**"
+                    "/api/users/register",
+                    "/api/users/partner/register",
+                    "/api/users/login",
+                    "/uploads/**"
                 )
                 .permitAll()
 
 
                 // =================================
-                // PUBLIC GET APIs
-                // WEBSITE
+                // AI RECOMMENDATION
+                // USER ONLY
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/categories/**",
-                        "/api/salons/**",
-                        "/api/services/**",
-                        "/api/products/**",
-                        "/api/employees/**"
+                    HttpMethod.POST,
+                    "/api/ai/recommend"
+                )
+                .hasRole("USER")
+
+
+                // =================================
+                // PARTNER APPLICATION STATUS
+                // =================================
+                // Must come BEFORE /api/salons/**
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/salons/partner/status"
+                )
+                .hasRole("PARTNER")
+
+
+                // =================================
+                // PARTNER SALON APPLICATION
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/salons/partner"
+                )
+                .hasRole("PARTNER")
+
+
+                // =================================
+                // PARTNER SALON UPDATE
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/salons/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+
+                // =================================
+                // CATEGORY - PUBLIC GET
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/categories/**"
                 )
                 .permitAll()
 
 
                 // =================================
-                // CATEGORY
-                // ADMIN ONLY
+                // CATEGORY - ADMIN ONLY
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/categories/**"
+                    HttpMethod.POST,
+                    "/api/categories/**"
                 )
                 .hasRole("ADMIN")
 
                 .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/categories/**"
+                    HttpMethod.PUT,
+                    "/api/categories/**"
                 )
                 .hasRole("ADMIN")
 
                 .requestMatchers(
-                        HttpMethod.DELETE,
-                        "/api/categories/**"
-                )
-                .hasRole("ADMIN")
-
-
-                // =================================
-                // SALON
-                // ADMIN ONLY
-                // =================================
-
-                .requestMatchers(
-                        "/api/salons/**"
+                    HttpMethod.DELETE,
+                    "/api/categories/**"
                 )
                 .hasRole("ADMIN")
 
 
                 // =================================
-                // EMPLOYEE
-                // ADMIN ONLY
+                // SALON - PUBLIC GET
                 // =================================
 
                 .requestMatchers(
-                        "/api/employees/**"
+                    HttpMethod.GET,
+                    "/api/salons/**"
                 )
-                .hasRole("ADMIN")
+                .permitAll()
 
 
                 // =================================
-                // SERVICE
-                // ADMIN ONLY
+                // SALON - ADMIN + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        "/api/services/**"
+                    HttpMethod.POST,
+                    "/api/salons/**"
                 )
-                .hasRole("ADMIN")
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/salons/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
 
 
                 // =================================
-                // PRODUCT
-                // ADMIN ONLY
+                // EMPLOYEE - PUBLIC GET
                 // =================================
 
                 .requestMatchers(
-                        "/api/products/**"
+                    HttpMethod.GET,
+                    "/api/employees/**"
                 )
-                .hasRole("ADMIN")
+                .permitAll()
+
+
+                // =================================
+                // EMPLOYEE - PARTNER + ADMIN
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/employees/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/employees/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/employees/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+
+                // =================================
+                // SERVICE - PUBLIC GET
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/services/**"
+                )
+                .permitAll()
+
+
+                // =================================
+                // SERVICE - PARTNER + ADMIN
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/services/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/services/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/services/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+
+                // =================================
+                // PRODUCT - PUBLIC GET
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/products/**"
+                )
+                .permitAll()
+
+
+                // =================================
+                // PRODUCT - PARTNER + ADMIN
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/products/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/products/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/products/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "PARTNER"
+                )
 
 
                 // =================================
                 // APPOINTMENT - GET
-                // USER + ADMIN + RECEPTIONIST
+                // USER + ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/appointments/**"
+                    HttpMethod.GET,
+                    "/api/appointments/**"
                 )
                 .hasAnyRole(
-                        "USER",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "USER",
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // APPOINTMENT - CREATE
-                // CUSTOMER CAN BOOK
+                // USER + ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/appointments/add"
+                    HttpMethod.POST,
+                    "/api/appointments/add"
                 )
                 .hasAnyRole(
-                        "USER",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "USER",
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // APPOINTMENT - UPDATE
+                // ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/appointments/**"
+                    HttpMethod.PUT,
+                    "/api/appointments/**"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // APPOINTMENT - DELETE
+                // ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.DELETE,
-                        "/api/appointments/**"
+                    HttpMethod.DELETE,
+                    "/api/appointments/**"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
@@ -233,106 +408,194 @@ public class SecurityConfig {
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/timeslots/available/**"
+                    HttpMethod.GET,
+                    "/api/timeslots/available/**"
+                )
+                .permitAll()
+
+
+                // =================================
+                // TIME SLOT - PUBLIC GET
+                // =================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/timeslots/**"
                 )
                 .permitAll()
 
 
                 // =================================
                 // TIME SLOT MANAGEMENT
-                // ADMIN + RECEPTIONIST
+                // ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        "/api/timeslots/**"
+                    HttpMethod.POST,
+                    "/api/timeslots/**"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.PUT,
+                    "/api/timeslots/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
+                )
+
+                .requestMatchers(
+                    HttpMethod.DELETE,
+                    "/api/timeslots/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // PRODUCT ORDER - CREATE
-                // USER + ADMIN + RECEPTIONIST
+                // USER + ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/product-orders/add"
+                    HttpMethod.POST,
+                    "/api/product-orders/add"
                 )
                 .hasAnyRole(
-                        "USER",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "USER",
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // PRODUCT ORDER - GET
+                // USER + ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/product-orders/**"
+                    HttpMethod.GET,
+                    "/api/product-orders/**"
                 )
                 .hasAnyRole(
-                        "USER",
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "USER",
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // PRODUCT ORDER - UPDATE
+                // ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/product-orders/**"
+                    HttpMethod.PUT,
+                    "/api/product-orders/**"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
                 // PRODUCT ORDER - DELETE
+                // ADMIN + RECEPTIONIST + PARTNER
                 // =================================
 
                 .requestMatchers(
-                        HttpMethod.DELETE,
-                        "/api/product-orders/**"
+                    HttpMethod.DELETE,
+                    "/api/product-orders/**"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
-                // =================================
-                // BILLS
-                // ADMIN + RECEPTIONIST
-                // =================================
+                // =====================================================
+                // BILLS - CUSTOMER MY BILLS
+                // =====================================================
 
                 .requestMatchers(
-                        "/api/bills/**"
+                    HttpMethod.GET,
+                    "/api/bills/my"
+                )
+                .hasRole("USER")
+
+
+                // =====================================================
+                // BILLS - PARTNER MY BILLS
+                // =====================================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/bills/partner"
+                )
+                .hasRole("PARTNER")
+
+
+                // =====================================================
+                // BILLS - CUSTOMER VIEW ONE BILL
+                // =====================================================
+
+                .requestMatchers(
+                    HttpMethod.GET,
+                    "/api/bills/{id:[0-9]+}"
                 )
                 .hasAnyRole(
-                        "ADMIN",
-                        "RECEPTIONIST"
+                    "USER",
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
+                )
+
+
+                // =====================================================
+                // BILLS - ADMIN / RECEPTIONIST / PARTNER
+                // =====================================================
+
+                .requestMatchers(
+                    "/api/bills/**"
+                )
+                .hasAnyRole(
+                    "ADMIN",
+                    "RECEPTIONIST",
+                    "PARTNER"
                 )
 
 
                 // =================================
-                // DASHBOARD
-                // ADMIN ONLY
+                // PARTNER DASHBOARD
                 // =================================
 
                 .requestMatchers(
-                        "/api/dashboard/**"
+                    HttpMethod.GET,
+                    "/api/dashboard/partner"
+                )
+                .hasRole("PARTNER")
+
+
+                // =================================
+                // ADMIN DASHBOARD
+                // =================================
+
+                .requestMatchers(
+                    "/api/dashboard/**"
                 )
                 .hasRole("ADMIN")
 
@@ -342,20 +605,20 @@ public class SecurityConfig {
                 // =================================
 
                 .requestMatchers(
-                        "/api/users/hello"
+                    "/api/users/hello"
                 )
                 .hasAnyRole(
-                        "USER",
-                        "ADMIN"
+                    "USER",
+                    "ADMIN"
                 )
 
 
                 // =================================
-                // ADMIN APIs
+                // ADMIN USER APIs
                 // =================================
 
                 .requestMatchers(
-                        "/api/users/admin/**"
+                    "/api/users/admin/**"
                 )
                 .hasRole("ADMIN")
 
@@ -366,15 +629,16 @@ public class SecurityConfig {
 
                 .anyRequest()
                 .authenticated()
-            )
-
-            // =====================================
-            // HTTP BASIC DISABLED
-            // =====================================
-
-            .httpBasic(httpBasic ->
-                    httpBasic.disable()
             );
+
+
+        // =========================================
+        // HTTP BASIC DISABLED
+        // =========================================
+
+        http.httpBasic(
+            httpBasic -> httpBasic.disable()
+        );
 
 
         // =========================================
@@ -382,8 +646,8 @@ public class SecurityConfig {
         // =========================================
 
         http.addFilterBefore(
-                jwtFilter,
-                UsernamePasswordAuthenticationFilter.class
+            jwtFilter,
+            UsernamePasswordAuthenticationFilter.class
         );
 
 
@@ -409,6 +673,2133 @@ public class SecurityConfig {
 }
 
 
+
+
+
+
+
+
+
+
+//package com.salonmanagementsystem.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.http.SessionCreationPolicy;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+//
+//import com.salonmanagementsystem.jwt.JwtFilter;
+//
+//@Configuration
+//public class SecurityConfig {
+//
+//    private final JwtFilter jwtFilter;
+//
+//    public SecurityConfig(JwtFilter jwtFilter) {
+//
+//        this.jwtFilter = jwtFilter;
+//    }
+//
+//
+//    // =========================================
+//    // PASSWORD ENCODER
+//    // =========================================
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//
+//        return new BCryptPasswordEncoder();
+//    }
+//
+//
+//    // =========================================
+//    // SECURITY FILTER CHAIN
+//    // =========================================
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(
+//            HttpSecurity http) throws Exception {
+//
+//        http
+//
+//            // =====================================
+//            // CSRF
+//            // =====================================
+//
+//            .csrf(csrf -> csrf.disable())
+//
+//
+//            // =====================================
+//            // CORS
+//            // =====================================
+//
+//            .cors(cors -> {})
+//
+//
+//            // =====================================
+//            // SESSION
+//            // =====================================
+//
+//            .sessionManagement(session ->
+//                session.sessionCreationPolicy(
+//                    SessionCreationPolicy.STATELESS
+//                )
+//            )
+//
+//
+//            // =====================================
+//            // AUTHORIZATION
+//            // =====================================
+//
+//            .authorizeHttpRequests(auth -> auth
+//
+//
+//                // =================================
+//                // PUBLIC AUTH APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/register",
+//                    "/api/users/partner/register",
+//                    "/api/users/login",
+//                    "/uploads/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // PARTNER APPLICATION STATUS
+//                // =================================
+//                // Must come BEFORE /api/salons/**
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/salons/partner/status"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // PARTNER SALON APPLICATION
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/salons/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // PARTNER SALON UPDATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/salons/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // CATEGORY - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/categories/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // CATEGORY - ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SALON - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/salons/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // SALON - ADMIN + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/salons/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/salons/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // EMPLOYEE - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/employees/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // EMPLOYEE - PARTNER + ADMIN
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/employees/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/employees/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/employees/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // SERVICE - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/services/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // SERVICE - PARTNER + ADMIN
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/services/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/services/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/services/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/products/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // PRODUCT - PARTNER + ADMIN
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/products/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/products/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/products/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - GET
+//                // USER + ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - CREATE
+//                // USER + ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/appointments/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - UPDATE
+//                // ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - DELETE
+//                // ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // TIME SLOT - AVAILABLE
+//                // PUBLIC
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/timeslots/available/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // TIME SLOT - PUBLIC GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/timeslots/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // TIME SLOT MANAGEMENT
+//                // ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - CREATE
+//                // USER + ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/product-orders/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - GET
+//                // USER + ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - UPDATE
+//                // ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - DELETE
+//                // ADMIN + RECEPTIONIST + PARTNER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =====================================================
+//                // BILLS - CUSTOMER MY BILLS
+//                // =====================================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/bills/my"
+//                )
+//                .hasRole("USER")
+//
+//
+//                // =====================================================
+//                // BILLS - PARTNER MY BILLS
+//                // =====================================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/bills/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =====================================================
+//                // BILLS - CUSTOMER VIEW ONE BILL
+//                //
+//                // IMPORTANT:
+//                // {id:[0-9]+} means ONLY numeric bill IDs.
+//                //
+//                // Example:
+//                // /api/bills/1
+//                // /api/bills/2
+//                //
+//                // It will NOT match:
+//                // /api/bills/all
+//                // /api/bills/search
+//                // /api/bills/pagination
+//                // /api/bills/payment/PAID
+//                // =====================================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/bills/{id:[0-9]+}"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =====================================================
+//                // BILLS - ADMIN / RECEPTIONIST / PARTNER
+//                // =====================================================
+//
+//                .requestMatchers(
+//                    "/api/bills/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST",
+//                    "PARTNER"
+//                )
+//
+//
+//                // =================================
+//                // PARTNER DASHBOARD
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/dashboard/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // ADMIN DASHBOARD
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/dashboard/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // USER HELLO
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/hello"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN"
+//                )
+//
+//
+//                // =================================
+//                // ADMIN USER APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/admin/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EVERYTHING ELSE
+//                // =================================
+//
+//                .anyRequest()
+//                .authenticated()
+//            );
+//
+//
+//        // =========================================
+//        // HTTP BASIC DISABLED
+//        // =========================================
+//
+//        http.httpBasic(
+//            httpBasic -> httpBasic.disable()
+//        );
+//
+//
+//        // =========================================
+//        // JWT FILTER
+//        // =========================================
+//
+//        http.addFilterBefore(
+//            jwtFilter,
+//            UsernamePasswordAuthenticationFilter.class
+//        );
+//
+//
+//        // =========================================
+//        // BUILD
+//        // =========================================
+//
+//        return http.build();
+//    }
+//
+//
+//    // =========================================
+//    // AUTHENTICATION MANAGER
+//    // =========================================
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager(
+//            AuthenticationConfiguration configuration)
+//            throws Exception {
+//
+//        return configuration.getAuthenticationManager();
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//package com.salonmanagementsystem.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.http.SessionCreationPolicy;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+//
+//import com.salonmanagementsystem.jwt.JwtFilter;
+//
+//
+//@Configuration
+//public class SecurityConfig {
+//
+//    private final JwtFilter jwtFilter;
+//
+//
+//    public SecurityConfig(JwtFilter jwtFilter) {
+//
+//        this.jwtFilter = jwtFilter;
+//
+//    }
+//
+//
+//    // =========================================
+//    // PASSWORD ENCODER
+//    // =========================================
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//
+//        return new BCryptPasswordEncoder();
+//
+//    }
+//
+//
+//    // =========================================
+//    // SECURITY FILTER CHAIN
+//    // =========================================
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(
+//            HttpSecurity http) throws Exception {
+//
+//        http
+//
+//            // =====================================
+//            // CSRF
+//            // =====================================
+//
+//            .csrf(csrf -> csrf.disable())
+//
+//
+//            // =====================================
+//            // CORS
+//            // =====================================
+//
+//            .cors(cors -> {})
+//
+//
+//            // =====================================
+//            // SESSION
+//            // =====================================
+//
+//            .sessionManagement(session ->
+//                session.sessionCreationPolicy(
+//                    SessionCreationPolicy.STATELESS
+//                )
+//            )
+//
+//
+//            // =====================================
+//            // AUTHORIZATION
+//            // =====================================
+//
+//            .authorizeHttpRequests(auth -> auth
+//
+//
+//                // =================================
+//                // PUBLIC APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/register",
+//                    "/api/users/partner/register",
+//                    "/api/users/login",
+//                    "/uploads/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // PARTNER APPLICATION STATUS
+//                // PARTNER ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/salons/partner/status"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // PARTNER
+//                // SUBMIT SALON APPLICATION
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/salons/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // PUBLIC GET APIs
+//                // WEBSITE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/categories/**",
+//                    "/api/salons/**",
+//                    "/api/services/**",
+//                    "/api/products/**",
+//                    "/api/employees/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // CATEGORY
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SALON
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/salons/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EMPLOYEE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/employees/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SERVICE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/services/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // PRODUCT
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/products/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // APPOINTMENT - GET
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - CREATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/appointments/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - UPDATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - DELETE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // TIME SLOT - AVAILABLE
+//                // PUBLIC
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/timeslots/available/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // TIME SLOT MANAGEMENT
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - CREATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/product-orders/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - GET
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - UPDATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - DELETE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // BILLS
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/bills/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PARTNER REPORTS
+//                // PARTNER ONLY
+//                //
+//                // IMPORTANT:
+//                // MUST COME BEFORE
+//                // /api/dashboard/**
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/dashboard/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // DASHBOARD
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/dashboard/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // USER HELLO
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/hello"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN"
+//                )
+//
+//
+//                // =================================
+//                // ADMIN APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/admin/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EVERYTHING ELSE
+//                // =================================
+//
+//                .anyRequest()
+//                .authenticated()
+//
+//            );
+//
+//
+//        // =========================================
+//        // HTTP BASIC DISABLED
+//        // =========================================
+//
+//        http.httpBasic(
+//            httpBasic -> httpBasic.disable()
+//        );
+//
+//
+//        // =========================================
+//        // JWT FILTER
+//        // =========================================
+//
+//        http.addFilterBefore(
+//            jwtFilter,
+//            UsernamePasswordAuthenticationFilter.class
+//        );
+//
+//
+//        // =========================================
+//        // BUILD
+//        // =========================================
+//
+//        return http.build();
+//    }
+//
+//
+//    // =========================================
+//    // AUTHENTICATION MANAGER
+//    // =========================================
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager(
+//            AuthenticationConfiguration configuration)
+//            throws Exception {
+//
+//        return configuration.getAuthenticationManager();
+//
+//    }
+//
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//package com.salonmanagementsystem.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.http.SessionCreationPolicy;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+//
+//import com.salonmanagementsystem.jwt.JwtFilter;
+//
+//@Configuration
+//public class SecurityConfig {
+//
+//    private final JwtFilter jwtFilter;
+//
+//
+//    public SecurityConfig(
+//            JwtFilter jwtFilter) {
+//
+//        this.jwtFilter = jwtFilter;
+//    }
+//
+//
+//    // =========================================
+//    // PASSWORD ENCODER
+//    // =========================================
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//
+//        return new BCryptPasswordEncoder();
+//    }
+//
+//
+//    // =========================================
+//    // SECURITY FILTER CHAIN
+//    // =========================================
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(
+//            HttpSecurity http) throws Exception {
+//
+//        http
+//
+//            // =====================================
+//            // CSRF
+//            // =====================================
+//
+//            .csrf(csrf -> csrf.disable())
+//
+//
+//            // =====================================
+//            // CORS
+//            // =====================================
+//
+//            .cors(cors -> {})
+//
+//
+//            // =====================================
+//            // SESSION
+//            // =====================================
+//
+//            .sessionManagement(session ->
+//                session.sessionCreationPolicy(
+//                    SessionCreationPolicy.STATELESS
+//                )
+//            )
+//
+//
+//            // =====================================
+//            // AUTHORIZATION
+//            // =====================================
+//
+//            .authorizeHttpRequests(auth -> auth
+//
+//
+//                // =================================
+//                // PUBLIC APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/register",
+//                    "/api/users/partner/register",
+//                    "/api/users/login",
+//                    "/uploads/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // PARTNER APPLICATION STATUS
+//                // PARTNER ONLY
+//                //
+//                // IMPORTANT:
+//                // This must be BEFORE
+//                // /api/salons/**
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/salons/partner/status"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // ADMIN - PENDING PARTNER APPLICATIONS
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/salons/pending"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // ADMIN - APPROVE PARTNER SALON
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/salons/*/approve"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // ADMIN - REJECT PARTNER SALON
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/salons/*/reject"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // PUBLIC GET APIs
+//                // WEBSITE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/categories/**",
+//                    "/api/salons/**",
+//                    "/api/services/**",
+//                    "/api/products/**",
+//                    "/api/employees/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // CATEGORY
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // PARTNER
+//                // SUBMIT SALON APPLICATION
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/salons/partner"
+//                )
+//                .hasRole("PARTNER")
+//
+//
+//                // =================================
+//                // SALON
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/salons"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/salons/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/salons/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EMPLOYEE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/employees/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SERVICE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/services/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // PRODUCT
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/products/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // APPOINTMENT - GET
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - CREATE
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/appointments/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - UPDATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - DELETE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // TIME SLOT - AVAILABLE
+//                // PUBLIC
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/timeslots/available/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // TIME SLOT MANAGEMENT
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - CREATE
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/product-orders/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - GET
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - UPDATE
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - DELETE
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // BILLS
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/bills/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // DASHBOARD
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/dashboard/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // USER HELLO
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/hello"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN"
+//                )
+//
+//
+//                // =================================
+//                // ADMIN APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/admin/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EVERYTHING ELSE
+//                // =================================
+//
+//                .anyRequest()
+//                .authenticated()
+//            );
+//
+//
+//        // =========================================
+//        // HTTP BASIC DISABLED
+//        // =========================================
+//
+//        http.httpBasic(
+//            httpBasic -> httpBasic.disable()
+//        );
+//
+//
+//        // =========================================
+//        // JWT FILTER
+//        // =========================================
+//
+//        http.addFilterBefore(
+//            jwtFilter,
+//            UsernamePasswordAuthenticationFilter.class
+//        );
+//
+//
+//        // =========================================
+//        // BUILD
+//        // =========================================
+//
+//        return http.build();
+//    }
+//
+//
+//    // =========================================
+//    // AUTHENTICATION MANAGER
+//    // =========================================
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager(
+//            AuthenticationConfiguration configuration)
+//            throws Exception {
+//
+//        return configuration.getAuthenticationManager();
+//    }
+//
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//package com.salonmanagementsystem.config;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.http.HttpMethod;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.http.SessionCreationPolicy;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+//import org.springframework.security.crypto.password.PasswordEncoder;
+//import org.springframework.security.web.SecurityFilterChain;
+//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+//
+//import com.salonmanagementsystem.jwt.JwtFilter;
+//
+//@Configuration
+//public class SecurityConfig {
+//
+//    private final JwtFilter jwtFilter;
+//
+//    public SecurityConfig(JwtFilter jwtFilter) {
+//
+//        this.jwtFilter = jwtFilter;
+//
+//    }
+//
+//
+//    // =========================================
+//    // PASSWORD ENCODER
+//    // =========================================
+//
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//
+//        return new BCryptPasswordEncoder();
+//
+//    }
+//
+//
+//    // =========================================
+//    // SECURITY FILTER CHAIN
+//    // =========================================
+//
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(
+//            HttpSecurity http) throws Exception {
+//
+//        http
+//
+//            // =====================================
+//            // CSRF
+//            // =====================================
+//
+//            .csrf(csrf -> csrf.disable())
+//
+//
+//            // =====================================
+//            // CORS
+//            // =====================================
+//
+//            .cors(cors -> {})
+//
+//
+//            // =====================================
+//            // SESSION
+//            // =====================================
+//
+//            .sessionManagement(session ->
+//                session.sessionCreationPolicy(
+//                    SessionCreationPolicy.STATELESS
+//                )
+//            )
+//
+//
+//            // =====================================
+//            // AUTHORIZATION
+//            // =====================================
+//
+//            .authorizeHttpRequests(auth -> auth
+//
+//
+//                // =================================
+//                // PUBLIC APIs
+//                // =================================
+//
+//            		.requestMatchers(
+//            			    "/api/users/register",
+//            			    "/api/users/partner/register",
+//            			    "/api/users/login",
+//            			    "/uploads/**"
+//            			)
+//            			.permitAll()
+//
+//
+//                // =================================
+//                // PUBLIC GET APIs
+//                // WEBSITE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/categories/**",
+//                    "/api/salons/**",
+//                    "/api/services/**",
+//                    "/api/products/**",
+//                    "/api/employees/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // CATEGORY
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/categories/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SALON
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/salons/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EMPLOYEE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/employees/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // SERVICE
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/services/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // PRODUCT
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/products/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // APPOINTMENT - GET
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - CREATE
+//                // LOGGED-IN CUSTOMER
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/appointments/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - UPDATE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // APPOINTMENT - DELETE
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/appointments/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // TIME SLOT - AVAILABLE
+//                // PUBLIC
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/timeslots/available/**"
+//                )
+//                .permitAll()
+//
+//
+//                // =================================
+//                // TIME SLOT MANAGEMENT
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/timeslots/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - CREATE
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.POST,
+//                    "/api/product-orders/add"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - GET
+//                // USER + ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.GET,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - UPDATE
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.PUT,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // PRODUCT ORDER - DELETE
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    HttpMethod.DELETE,
+//                    "/api/product-orders/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // BILLS
+//                // ADMIN + RECEPTIONIST
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/bills/**"
+//                )
+//                .hasAnyRole(
+//                    "ADMIN",
+//                    "RECEPTIONIST"
+//                )
+//
+//
+//                // =================================
+//                // DASHBOARD
+//                // ADMIN ONLY
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/dashboard/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // USER HELLO
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/hello"
+//                )
+//                .hasAnyRole(
+//                    "USER",
+//                    "ADMIN"
+//                )
+//
+//
+//                // =================================
+//                // ADMIN APIs
+//                // =================================
+//
+//                .requestMatchers(
+//                    "/api/users/admin/**"
+//                )
+//                .hasRole("ADMIN")
+//
+//
+//                // =================================
+//                // EVERYTHING ELSE
+//                // =================================
+//
+//                .anyRequest()
+//                .authenticated()
+//            );
+//
+//
+//        // =========================================
+//        // HTTP BASIC DISABLED
+//        // =========================================
+//
+//        http.httpBasic(
+//            httpBasic -> httpBasic.disable()
+//        );
+//
+//
+//        // =========================================
+//        // JWT FILTER
+//        // =========================================
+//
+//        http.addFilterBefore(
+//            jwtFilter,
+//            UsernamePasswordAuthenticationFilter.class
+//        );
+//
+//
+//        // =========================================
+//        // BUILD
+//        // =========================================
+//
+//        return http.build();
+//
+//    }
+//
+//
+//    // =========================================
+//    // AUTHENTICATION MANAGER
+//    // =========================================
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager(
+//            AuthenticationConfiguration configuration)
+//            throws Exception {
+//
+//        return configuration.getAuthenticationManager();
+//
+//    }
+//
+//}
 
 
 
