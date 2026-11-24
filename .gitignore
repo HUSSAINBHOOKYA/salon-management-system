@@ -33,3 +33,12 @@ build/
 .vscode/
 
 uploads/
+ 
+# Environment variables and secrets 
+.env 
+.env.* 
+!.env.example 
+ 
+# Sensitive credentials 
+*.pem 
+*.key

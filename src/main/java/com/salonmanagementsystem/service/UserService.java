@@ -2,6 +2,7 @@ package com.salonmanagementsystem.service;
 
 import java.util.Optional;
 
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,10 @@ public class UserService {
 
     private final JwtUtil jwtUtil;
 
+    // =========================================================
+    // CONSTRUCTOR 
+    // ================================================
+    
     public UserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
@@ -63,7 +68,7 @@ public class UserService {
     // =========================================================
 
     public UserEntity registerPartner(
-            PartnerRegisterRequest request) {
+			PartnerRegisterRequest request) {
 
         // =========================================
         // CHECK EMAIL
